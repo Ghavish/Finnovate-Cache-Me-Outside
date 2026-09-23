@@ -1,16 +1,48 @@
-# React + Vite
+# GoalPath AI — Integrated Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This ZIP combines the latest Finnovate project with the Goals and Financial Overview screens.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Extract the ZIP and open the extracted folder in VS Code.
+2. Open **Terminal → New Terminal**.
+3. Run `npm install`.
+4. Run `npm run dev`.
+5. Open the local URL printed in the terminal.
 
-## React Compiler
+## Demo login
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Email: `aisha@goalpath.mu`
+- Password: `demo1234`
 
-## Expanding the ESLint configuration
+Any valid email plus a password containing at least four characters also works. Authentication is intentionally local for this standalone demo, so **no API keys are required**.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Browser routes
+
+- `/login` — functional demo login
+- `/dashboard` — connected financial and goal summary
+- `/input-data` — upload, voice or manual financial input
+- `/analysis-result` — review the financial summary after input
+- `/goals` — saved goals
+- `/goals/new` — goal creation and risk review
+- `/financial-overview` — editable salary and expenses plus transactions
+- `/coach` — small demo assistant using the same data
+
+Unknown URLs show a Page Not Found screen. Protected routes redirect signed-out users to `/login`.
+
+## Shared data
+
+The demo data is stored in browser `localStorage`. Adding a goal or editing salary/expenses updates the other screens. Use **Reset demo data** on Dashboard to restore the starting values.
+
+## Later Firebase/n8n connection
+
+Firebase and n8n variables in `.env.local.example` are optional placeholders. Keep private AI/provider keys on the backend, never in `VITE_...` variables. Replace `AuthContext.jsx` with Firebase Auth and replace local calculations with authenticated backend requests when those services are ready.
+
+## Quality checks
+
+```powershell
+npm run lint
+npm run build
+```
+
+Both commands pass in this delivered version.
