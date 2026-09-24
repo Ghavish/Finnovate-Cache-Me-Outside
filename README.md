@@ -1,6 +1,6 @@
-# GoalPath AI — Frontend
+# MoBudget — Frontend
 
-React + Vite frontend for GoalPath. Sign-in uses Firebase Authentication, and backend requests go to an n8n webhook.
+React + Vite frontend for MoBudget. Sign-in uses Firebase Authentication, and backend requests go to an n8n webhook.
 
 ## Setup
 
@@ -38,7 +38,7 @@ Anything starting with `VITE_` is bundled into the browser code, so it is public
 - `/analysis-result` — review the financial summary after input
 - `/goals` — saved goals
 - `/goals/new` — goal creation and risk review
-- `/financial-overview` — editable salary and expenses plus transactions
+- `/financial-overview` — salary, monthly expense summary and past transactions
 - `/coach` — small assistant using the same data
 
 Unknown URLs show a Page Not Found screen. Protected routes redirect signed-out users to `/login`.
@@ -48,14 +48,34 @@ Unknown URLs show a Page Not Found screen. Protected routes redirect signed-out 
 These screens read and write through n8n (MongoDB behind it), per signed-in user:
 
 - **Dashboard** cards: `getDashboard` on the Read API (salary, usual monthly spending, active goals).
-- **Financial Input**: uploads (images or PDF) and voice notes go to Main for an AI preview (document type, summary, confidence score). Nothing is saved until **Analyse my finances**, which sends `confirmTransaction`. A confirmed payslip also updates the profile salary.
+- **Financial Input**: uploads (images or PDF), camera scans and voice notes go to Main for an AI preview (document type, summary, confidence score). Nothing is saved until **Analyse my finances**, which sends `confirmTransaction`. A confirmed payslip also updates the profile salary.
 - **My Goals**: `listGoals` on the Read API; new goals are checked with `afford` and saved with `goal`; edits use `updateGoal`.
+- **Financial Overview**: salary and the monthly expense list come from `getDashboard`, past transactions from `listTransactions`. Salary edits use `updateSalary`; the expense summary is saved with `saveExpenses`.
 
-Financial Overview and AI Coach still use demo data from browser `localStorage`.
+Monthly expenses are the total of the expense summary (Essential, Adjustable, Optional). That total is the "usual monthly spending" used on the Dashboard, for safe saving capacity, goal checks and the AI Coach. Until a user adds expenses, it is estimated from repeat transactions.
+
+AI Coach still uses demo data from browser `localStorage`.
+
+### Camera scanning
+
+**Scan with camera** shows a live view from the back camera. The photo is shrunk to at most 1600 px (JPEG) and sent through the same image route as an upload. Browsers only allow the live view on `https` pages or `localhost`. On a plain `http` address, such as testing from your phone at `http://<laptop-ip>:5173`, the page offers your phone's camera app instead, which works anywhere.
+
+## Languages
+
+MoBudget is available in English, French and Kreol Morisien. Users pick a language from the menu in the header (or on the login and signup pages). The choice is remembered in the browser.
+
+- Every piece of interface text goes through `t()` from `useLanguage()`: `t('Monthly salary')`, or `t('{count} expenses', { count })` for text with values.
+- The English text is the key. French is in `src/i18n/fr.js` and Kreol in `src/i18n/mfe.js`.
+- Text chosen at runtime (menu labels, error messages) is marked with `k('...')` from `src/i18n/strings.js`, so the checker can find it. Category, document type and expense group names live in `src/i18n/labels.js`.
+- The AI summary of an upload, photo or voice note is written in the chosen language (the app sends `language` to n8n).
+- `npm run i18n:check` fails if any text is missing a French or Kreol translation, or if `{placeholders}` don't match.
+
+When you add or change interface text, add it to both `fr.js` and `mfe.js`, then run `npm run i18n:check`.
 
 ## Quality checks
 
 ```sh
 npm run lint
+npm run i18n:check
 npm run build
 ```

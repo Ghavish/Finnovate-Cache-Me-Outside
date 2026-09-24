@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const AppDataContext = createContext(null)
-const STORAGE_KEY = 'goalpath-demo-data-v1'
+const STORAGE_KEY = 'mobudget-demo-data-v1'
 
 const initialData = {
   salary: 35000,
