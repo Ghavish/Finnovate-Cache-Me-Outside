@@ -63,3 +63,14 @@ If you import by hand more than once, delete the demo user's old documents first
 | AI Coach (scene 10) | The AI Coach page still shows demo text and isn't connected to n8n yet. Skip scene 10 for now. |
 | "Deterministic Python algorithm" | The algorithm now runs as JavaScript inside n8n. The caption "Our algorithm decides" still fits. |
 | Activate the workflows | In n8n 2.x, click **Publish** on Main, Read API and AI Coach. |
+
+## The four test users
+
+`demo/test-users/` holds data for four more accounts (Anjali, Jean-Marc, Sarah, Yash), with `TEST_UID_1` to `TEST_UID_4` in place of real IDs. The files for uploading live in the app are kept by the team, not in this repo.
+
+1. Create the four accounts in Firebase with the emails and passwords from the team's `LOGINS.md`.
+2. Copy `LOGINS.md` into `seed-data/` in the project folder. That folder is git-ignored, so the passwords never reach GitHub.
+3. Make sure `.env.local` has `VITE_FIREBASE_API_KEY`, `MONGODB_URI` and `MONGODB_DB`.
+4. Run `npm run seed:test-users`, or `npm run seed:test-users -- --export` to get JSON files for Compass.
+
+The script signs in to each account for its real ID, then replaces those four users' profile, transactions and goals. The goal verdicts come from the app's own algorithm, so they can differ from the ones in `LOGINS.md`. The script prints what each user should see.

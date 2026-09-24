@@ -1,0 +1,47 @@
+[
+  {
+    "goalKey": "TEST_UID_1:gaming laptop",
+    "userId": "TEST_UID_1",
+    "goalType": "product",
+    "itemName": "Gaming laptop",
+    "targetAmount": 4500000,
+    "savedAmount": 1200000,
+    "link": "https://www.courts.mu/"
+  },
+  {
+    "goalKey": "TEST_UID_2:scooter (honda dio)",
+    "userId": "TEST_UID_2",
+    "goalType": "product",
+    "itemName": "Scooter (Honda Dio)",
+    "targetAmount": 6500000,
+    "savedAmount": 800000,
+    "link": null
+  },
+  {
+    "goalKey": "TEST_UID_3:trip to rodrigues",
+    "userId": "TEST_UID_3",
+    "goalType": "product",
+    "itemName": "Trip to Rodrigues",
+    "targetAmount": 2500000,
+    "savedAmount": 1500000,
+    "link": null
+  },
+  {
+    "goalKey": "TEST_UID_3:emergency fund",
+    "userId": "TEST_UID_3",
+    "goalType": "cash",
+    "itemName": "Emergency fund",
+    "targetAmount": 10000000,
+    "savedAmount": 3000000,
+    "link": null
+  },
+  {
+    "goalKey": "TEST_UID_4:samsung galaxy a26",
+    "userId": "TEST_UID_4",
+    "goalType": "product",
+    "itemName": "Samsung Galaxy A26",
+    "targetAmount": 1500000,
+    "savedAmount": 250000,
+    "link": null
+  }
+]
