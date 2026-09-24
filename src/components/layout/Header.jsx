@@ -20,7 +20,7 @@ export default function Header() {
         <button type="button"><Globe2 size={18} />EN / KR</button>
         <button type="button">
           <UserCircle size={25} />
-          <span>{user?.name || 'Teesha'}</span>
+          <span>{user?.displayName || user?.email}</span>
         </button>
         <button type="button" onClick={handleSignOut} aria-label="Log out">
           <LogOut size={19} />

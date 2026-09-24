@@ -1,48 +1,54 @@
-# GoalPath AI — Integrated Frontend
+# GoalPath AI — Frontend
 
-This ZIP combines the latest Finnovate project with the Goals and Financial Overview screens.
+React + Vite frontend for GoalPath. Sign-in uses Firebase Authentication, and backend requests go to an n8n webhook.
 
-## Run locally
+## Setup
 
-1. Extract the ZIP and open the extracted folder in VS Code.
-2. Open **Terminal → New Terminal**.
-3. Run `npm install`.
-4. Run `npm run dev`.
-5. Open the local URL printed in the terminal.
+1. Copy `.env.local.example` to `.env.local` and fill in your values (see below). `.env.local` is git-ignored, so never commit it.
+2. Run `npm install`.
+3. Run `npm run dev`.
+4. Open the local URL printed in the terminal.
 
-## Demo login
+## Environment variables
 
-- Email: `aisha@goalpath.mu`
-- Password: `demo1234`
+| Variable | What it is |
+| --- | --- |
+| `VITE_FIREBASE_API_KEY` | Firebase web API key (Project settings → General → Your apps). |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain, e.g. `your-project.firebaseapp.com`. |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID. |
+| `VITE_FIREBASE_APP_ID` | Firebase web app ID. |
+| `VITE_N8N_WEBHOOK_URL` | n8n webhook that receives authenticated requests. |
 
-Any valid email plus a password containing at least four characters also works. Authentication is intentionally local for this standalone demo, so **no API keys are required**.
+Email/Password sign-in must be enabled in the Firebase console (Authentication → Sign-in method).
+
+Anything starting with `VITE_` is bundled into the browser code, so it is public. Keep private AI/provider keys on the backend (n8n), never in `VITE_` variables.
+
+## Accounts
+
+- Create an account at `/signup` (email, password, optional monthly salary). After sign-up the app asks n8n to create the user's profile, then opens the dashboard.
+- Log in at `/login`. There is no built-in demo account.
 
 ## Browser routes
 
-- `/login` — functional demo login
-- `/dashboard` — connected financial and goal summary
+- `/login` — log in with Firebase
+- `/signup` — create a Firebase account
+- `/dashboard` — financial and goal summary
 - `/input-data` — upload, voice or manual financial input
 - `/analysis-result` — review the financial summary after input
 - `/goals` — saved goals
 - `/goals/new` — goal creation and risk review
 - `/financial-overview` — editable salary and expenses plus transactions
-- `/coach` — small demo assistant using the same data
+- `/coach` — small assistant using the same data
 
 Unknown URLs show a Page Not Found screen. Protected routes redirect signed-out users to `/login`.
 
 ## Shared data
 
-The demo data is stored in browser `localStorage`. Adding a goal or editing salary/expenses updates the other screens. Use **Reset demo data** on Dashboard to restore the starting values.
-
-## Later Firebase/n8n connection
-
-Firebase and n8n variables in `.env.local.example` are optional placeholders. Keep private AI/provider keys on the backend, never in `VITE_...` variables. Replace `AuthContext.jsx` with Firebase Auth and replace local calculations with authenticated backend requests when those services are ready.
+Goals and financial data are currently stored in browser `localStorage` and are not yet tied to the signed-in user. Adding a goal or editing salary/expenses updates the other screens. Use **Reset demo data** on Dashboard to restore the starting values.
 
 ## Quality checks
 
-```powershell
+```sh
 npm run lint
 npm run build
 ```
-
-Both commands pass in this delivered version.

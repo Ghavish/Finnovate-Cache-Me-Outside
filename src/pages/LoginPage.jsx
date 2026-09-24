@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Target } from 'lucide-react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { logIn, authMessage } from '../firebase/authService.js' // 1. Added Firebase imports
 
@@ -9,8 +9,8 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   
-  const [email, setEmail] = useState('aisha@goalpath.mu')
-  const [password, setPassword] = useState('demo1234')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
 
@@ -47,15 +47,15 @@ export default function LoginPage() {
         <form onSubmit={submit}>
           <span className="eyebrow">WELCOME BACK</span>
           <h2>Log in to GoalPath</h2>
-          <p>Demo details are already filled in. Click Log in to continue.</p>
+          <p>Enter your email and password to continue.</p>
           
           <label>Email address
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           
           <label>Password
             <div className="password-input">
-              <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input type={show ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
               <button type="button" onClick={() => setShow((v) => !v)} aria-label="Show or hide password">
                 {show ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
@@ -66,9 +66,7 @@ export default function LoginPage() {
           
           <button className="primary-button" type="submit">Log in</button>
           
-          <div className="demo-box">
-            <strong>Standalone demo:</strong> login is stored in this browser. Firebase can replace the AuthContext later.
-          </div>
+          <p className="auth-switch">New to GoalPath? <Link to="/signup">Create an account</Link></p>
         </form>
       </section>
     </main>

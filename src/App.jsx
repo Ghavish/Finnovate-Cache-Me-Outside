@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext' // <-- Add the provider here
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
 
@@ -16,31 +15,28 @@ import AnalysisResultPage from './pages/AnalysisResultPage.jsx'
 
 export default function App() {
   return (
-    // Wraps entire routing tree in the AuthProvider
-    <AuthProvider>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
 
-        {/* Protected Dashboard Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/input-data" element={<InputDataPage />} />
-            <Route path="/analysis-result" element={<AnalysisResultPage />} />
-            <Route path="/goals" element={<GoalsPage />} />
-            <Route path="/goals/new" element={<GoalsPage startCreating />} />
-            <Route path="/financial-overview" element={<FinancialOverviewPage />} />
-            <Route path="/coach" element={<AICoachPage />} />
-          </Route>
+      {/* Protected Dashboard Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/input-data" element={<InputDataPage />} />
+          <Route path="/analysis-result" element={<AnalysisResultPage />} />
+          <Route path="/goals" element={<GoalsPage />} />
+          <Route path="/goals/new" element={<GoalsPage startCreating />} />
+          <Route path="/financial-overview" element={<FinancialOverviewPage />} />
+          <Route path="/coach" element={<AICoachPage />} />
         </Route>
+      </Route>
 
-        {/* Fallback Route */}
+      {/* Fallback Route */}
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </AuthProvider>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   )
 }
