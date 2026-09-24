@@ -1,0 +1,334 @@
+{
+  "name": "GoalPath Read API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "api/v1/read",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0af7e5ca-0b9f-4c41-b9b0-a1036187e24f",
+      "name": "Read Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "69c55b43-137b-48d0-9c4b-87fc851ab41b"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Auth Bouncer (Python Code node, replaces the HTTP Firebase Gatekeeper) ---\n# Mode: Run Once for All Items. Needs stdlib allow: json, urllib\nimport json\nimport urllib.error\nimport urllib.request\n \n# --- Config ---\n# Firebase Web API keys are public by design: the same key ships in the React app.\nFIREBASE_WEB_API_KEY = \"AIzaSyClep1OeRQHb18zuwGblC8ld6Eak5_wnso\"\nLOOKUP_URL = (\n    \"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=\"\n    + FIREBASE_WEB_API_KEY\n)\nIDENTITY_FIELDS = (\"userId\", \"email\")\n \n# --- Read the webhook request ---\nwebhook_item = _items[0][\"json\"]\nrequest_headers = webhook_item.get(\"headers\") or {}\nrequest_body = webhook_item.get(\"body\") or {}\n \nauth_header = request_headers.get(\"authorization\", \"\")\nif auth_header.lower().startswith(\"bearer \"):\n    id_token = auth_header[7:].strip()\nelse:\n    id_token = \"\"\n \nif not id_token:\n    raise Exception(\"UNAUTHORIZED: missing Bearer token\")\n \n# --- Verify the ID token with Google ---\nlookup_payload = json.dumps({\"idToken\": id_token}).encode(\"utf-8\")\nlookup_request = urllib.request.Request(\n    LOOKUP_URL,\n    data=lookup_payload,\n    headers={\"Content-Type\": \"application/json\"},\n    method=\"POST\",\n)\ntry:\n    with urllib.request.urlopen(lookup_request, timeout=10) as google_response:\n        lookup_result = json.loads(google_response.read().decode(\"utf-8\"))\nexcept urllib.error.HTTPError:\n    raise Exception(\"UNAUTHORIZED: token rejected by Google\")\n \nfirebase_users = lookup_result.get(\"users\") or []\nif not firebase_users:\n    raise Exception(\"UNAUTHORIZED: no Firebase user for this token\")\n \nverified_user = firebase_users[0]\n \n# --- Output: the request body plus the verified identity ---\n# Any userId or email sent by the client is dropped and replaced.\nsafe_body = {\n    key: value for key, value in request_body.items() if key not in IDENTITY_FIELDS\n}\nreturn [{\"json\": {\n    **safe_body,\n    \"userId\": verified_user[\"localId\"],\n    \"email\": verified_user.get(\"email\"),\n}}]\n"
+      },
+      "id": "413415d7-3fab-4669-a66f-6fce1ebef642",
+      "name": "Auth Bouncer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"error\": \"UNAUTHORIZED\" }",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "c0828232-94fd-49f3-8bb4-be0729be71d6",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        440,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-getProfile",
+                    "leftValue": "={{ $json.inputType }}",
+                    "rightValue": "getProfile",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "getProfile"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-getDashboard",
+                    "leftValue": "={{ $json.inputType }}",
+                    "rightValue": "getDashboard",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "getDashboard"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-listTransactions",
+                    "leftValue": "={{ $json.inputType }}",
+                    "rightValue": "listTransactions",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "listTransactions"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-listGoals",
+                    "leftValue": "={{ $json.inputType }}",
+                    "rightValue": "listGoals",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "listGoals"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "7b0c0acb-f469-422f-baac-9d828dd0e7a8",
+      "name": "Switch on read inputType",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        440,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"error\": \"UNKNOWN_READ_TYPE\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "53be56f8-777b-428a-be09-8ef4e2174c34",
+      "name": "Respond Unknown Read",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        700,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "users",
+        "query": "=[\n  { \"$match\": { \"userId\": \"{{ $json.userId }}\" } },\n  { \"$facet\": { \"profile\": [ { \"$limit\": 1 }, { \"$project\": { \"_id\": 0 } } ] } },\n  { \"$lookup\": {\n      \"from\": \"transactions\",\n      \"pipeline\": [\n        { \"$match\": { \"userId\": \"{{ $json.userId }}\" } },\n        { \"$addFields\": { \"id\": { \"$toString\": \"$_id\" } } },\n        { \"$project\": { \"_id\": 0 } }\n      ],\n      \"as\": \"transactions\"\n  } },\n  { \"$lookup\": {\n      \"from\": \"goals\",\n      \"pipeline\": [\n        { \"$match\": { \"userId\": \"{{ $json.userId }}\" } },\n        { \"$addFields\": { \"id\": { \"$toString\": \"$_id\" } } },\n        { \"$project\": { \"_id\": 0 } }\n      ],\n      \"as\": \"goals\"\n  } },\n  { \"$addFields\": {\n      \"userId\": \"{{ $json.userId }}\",\n      \"request\": { \"$literal\": {{ JSON.stringify($json) }} }\n  } }\n]\n"
+      },
+      "id": "d35e0bfd-b4ea-4327-97ae-2fd430bc3fd6",
+      "name": "Get User Bundle",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        700,
+        280
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Shape Read Response (Python Code node, Read API) ---\n# Input: Get User Bundle aggregate (profile[], transactions[], goals[], request).\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\n# Steps 1-2 below mirror the Affordability Algorithm. Change both together.\nfrom datetime import datetime, timedelta, timezone\n\nMAURITIUS_TZ = timezone(timedelta(hours=4))\nDEFAULT_LIMIT = 50\nMAX_LIMIT = 200\n# Suggested grouping for the Financial Overview card (team can edit)\nEXPENSE_GROUPS = {\n    \"essential\": {\"groceries\", \"rent\", \"utilities\", \"transport\", \"fuel\", \"telecom\",\n                  \"health\", \"education\"},\n    \"adjustable\": {\"dining\", \"clothing\", \"household\", \"subscriptions\"},\n    \"optional\": {\"entertainment\", \"gifts\", \"festival\", \"other\"},\n}\n\n# --- Input ---\nbundle = _items[0][\"json\"]\nrequest = bundle.get(\"request\") or {}\naction = request.get(\"inputType\")\nprofile_rows = bundle.get(\"profile\") or []\nprofile = profile_rows[0] if profile_rows else None\ntxns = bundle.get(\"transactions\") or []\ngoals = bundle.get(\"goals\") or []\nnow_mu = datetime.now(MAURITIUS_TZ)\ntoday = now_mu.strftime(\"%Y-%m-%d\")\nsince_30 = (now_mu - timedelta(days=30)).strftime(\"%Y-%m-%d\")\nprofile_complete = bool(profile) and profile.get(\"salary\") is not None\n\n\ndef newest_first(rows):\n    return sorted(rows, key=lambda t: (str(t.get(\"txnDate\") or \"\"),\n                                       str(t.get(\"createdAt\") or \"\")), reverse=True)\n\n\ndef txn_view(t):\n    return {\"id\": t.get(\"id\"), \"txnDate\": t.get(\"txnDate\"),\n            \"amountCents\": int(t.get(\"amount\") or 0), \"direction\": t.get(\"direction\"),\n            \"category\": t.get(\"category\"), \"vendor\": t.get(\"vendor\"),\n            \"name\": t.get(\"name\"), \"source\": t.get(\"source\"),\n            \"isRoutine\": bool(t.get(\"isRoutine\"))}\n\n\ndef respond(data):\n    return [{\"json\": {\"success\": True, \"record\": action, \"data\": data}}]\n\n\n# --- getProfile ---\nif action == \"getProfile\":\n    return respond({\"profileComplete\": profile_complete, \"profile\": profile})\n\n# --- listGoals ---\nif action == \"listGoals\":\n    rows = sorted(goals, key=lambda g: str(g.get(\"updatedAt\") or \"\"), reverse=True)\n    return respond({\"count\": len(rows), \"goals\": [{\n        \"id\": g.get(\"id\"), \"goalKey\": g.get(\"goalKey\"), \"itemName\": g.get(\"itemName\"),\n        \"goalType\": g.get(\"goalType\"), \"targetAmountCents\": int(g.get(\"targetAmount\") or 0),\n        \"savedAmountCents\": int(g.get(\"savedAmount\") or 0),\n        \"verdict\": g.get(\"verdict\"), \"status\": g.get(\"status\"),\n        \"timelineMonths\": g.get(\"timelineMonths\"), \"link\": g.get(\"link\"),\n        \"updatedAt\": g.get(\"updatedAt\")} for g in rows]})\n\n# --- listTransactions (filters: month YYYY-MM, category, direction; limit) ---\nif action == \"listTransactions\":\n    try:\n        limit = int(request.get(\"limit\") or DEFAULT_LIMIT)\n    except (TypeError, ValueError):\n        limit = DEFAULT_LIMIT\n    limit = min(max(limit, 1), MAX_LIMIT)\n    rows = txns\n    if request.get(\"month\"):\n        rows = [t for t in rows if str(t.get(\"txnDate\") or \"\").startswith(request[\"month\"])]\n    if request.get(\"category\"):\n        rows = [t for t in rows if t.get(\"category\") == request[\"category\"]]\n    if request.get(\"direction\"):\n        rows = [t for t in rows if t.get(\"direction\") == request[\"direction\"]]\n    rows = newest_first(rows)\n    return respond({\"totalCount\": len(rows), \"returned\": min(limit, len(rows)),\n                    \"transactions\": [txn_view(t) for t in rows[:limit]]})\n\n# --- getDashboard ---\n# Step 1 (as Affordability): inferred balance\nprofile = profile or {}\nif profile.get(\"manualBalance\") is not None:\n    balance = int(profile[\"manualBalance\"])\n    cutoff = str(profile.get(\"manualBalanceDate\") or \"\")\n    recent = [t for t in txns if str(t.get(\"txnDate\")) > cutoff]\nelse:\n    balance, recent = 0, txns\nfor t in recent:\n    amount = int(t.get(\"amount\", 0))\n    balance += amount if t.get(\"direction\") == \"income\" else -amount\n\n# Step 2 (as Affordability): routine monthly baseline\nroutine = [t for t in txns if t.get(\"isRoutine\") and t.get(\"direction\") == \"expense\"]\nmonths_seen = len({str(t.get(\"txnDate\"))[:7] for t in routine}) or 1\nmonthly_routine = sum(int(t.get(\"amount\", 0)) for t in routine) // months_seen\nsalary = int(profile.get(\"salary\") or 0)\n\nlast_30 = [t for t in txns if since_30 <= str(t.get(\"txnDate\") or \"\") <= today]\nbreakdown = {}\nfor t in last_30:\n    if t.get(\"direction\") == \"expense\":\n        breakdown[t.get(\"category\") or \"other\"] = (\n            breakdown.get(t.get(\"category\") or \"other\", 0) + int(t.get(\"amount\") or 0))\ngroups = {name: sum(v for k, v in breakdown.items() if k in cats)\n          for name, cats in EXPENSE_GROUPS.items()}\nstatus_counts = {}\nfor g in goals:\n    status_counts[g.get(\"status\") or \"unknown\"] = status_counts.get(\n        g.get(\"status\") or \"unknown\", 0) + 1\n\nreturn respond({\n    \"asOf\": today,\n    \"profileComplete\": profile_complete,\n    \"salaryCents\": salary,\n    \"inferredBalanceCents\": balance,\n    \"monthlyRoutineCents\": monthly_routine,\n    \"safeSavingCapacityCents\": salary - monthly_routine,\n    \"expensesLast30DaysCents\": sum(breakdown.values()),\n    \"incomeLast30DaysCents\": sum(int(t.get(\"amount\") or 0) for t in last_30\n                                 if t.get(\"direction\") == \"income\"),\n    \"expenseBreakdownCents\": dict(sorted(breakdown.items(), key=lambda kv: -kv[1])),\n    \"expenseGroupsCents\": groups,\n    \"activeGoals\": len(goals),\n    \"goalsByStatus\": status_counts,\n    \"recentTransactions\": [txn_view(t) for t in newest_first(txns)[:5]],\n    \"hasHistory\": bool(txns),\n})\n"
+      },
+      "id": "401eb57c-d712-4d6e-b4bc-5f4a1696e11c",
+      "name": "Shape Read Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "494a0c95-c707-4d89-a142-5a5eab8d8a73",
+      "name": "Respond Read",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1160,
+        280
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Read Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth Bouncer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Bouncer": {
+      "main": [
+        [
+          {
+            "node": "Switch on read inputType",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch on read inputType": {
+      "main": [
+        [
+          {
+            "node": "Get User Bundle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User Bundle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User Bundle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User Bundle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Unknown Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User Bundle": {
+      "main": [
+        [
+          {
+            "node": "Shape Read Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Read Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Indian/Mauritius"
+  },
+  "tags": []
+}

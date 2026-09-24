@@ -1,0 +1,1695 @@
+{
+  "name": "Main",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "api/v1/process",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "74ce15a4-e6c0-468b-aca4-d2a4f70a0440",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        160
+      ],
+      "webhookId": "3c009ee2-edf9-4072-92ec-b8785066cfa8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Read this financial document image (payslip, receipt or purchase record) and extract its transaction data.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Fast OCR agent for Mauritian FinTech. Extract the vendor, every line item and the receipt date. Convert MUR/Rs amounts to integer cents (Rs 150 = 15000).   For each line item give: - name - price: the unit price in integer cents - qty: the quantity (can be a decimal, e.g. 0.5 kg) - category: one of groceries, dining, transport, fuel, utilities, rent, telecom, health,   education, clothing, household, entertainment, subscriptions, gifts, festival, salary,   other - direction: \"expense\", unless the line is money received (\"income\")   txnDate is the date printed on the receipt, formatted YYYY-MM-DD. claimedTotalCents is the total printed on the receipt, in integer cents. Output a confidenceScore (0.0-1.0). Do not perform verification maths. Also classify the document: docType is \"payslip\" (salary slip / payroll), \"receipt\" (till or shop receipt) or \"purchase\" (invoice, order or other purchase record). For a payslip, return ONE line item named \"Net salary\" with the net pay as price, qty 1, category salary, direction income, and claimedTotalCents equal to that net pay. summary is one or two plain sentences saying what the document is and the key amounts you read."
+            },
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "Type: Image (Binary). Image Data Field Name: data"
+            }
+          ]
+        }
+      },
+      "id": "f22bbe04-261e-4ec3-935e-bb6a88f81b39",
+      "name": "Gemini Receipt Extract",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        544,
+        -992
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4976b7e7-e87c-452b-b472-5155b3cce6d3",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -784
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iv1A4z5pHK5ZZsWj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"vendor\": {\n      \"type\": \"string\"\n    },\n    \"txnDate\": {\n      \"type\": \"string\",\n      \"description\": \"Date printed on the receipt, YYYY-MM-DD\"\n    },\n    \"lineItems\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"price\": {\n            \"type\": \"number\",\n            \"description\": \"Unit price in integer cents\"\n          },\n          \"qty\": {\n            \"type\": \"number\"\n          },\n          \"category\": {\n            \"type\": \"string\",\n            \"description\": \"One of the fixed category list\"\n          },\n          \"direction\": {\n            \"type\": \"string\",\n            \"description\": \"expense or income\"\n          }\n        }\n      }\n    },\n    \"claimedTotalCents\": {\n      \"type\": \"number\"\n    },\n    \"confidenceScore\": {\n      \"type\": \"number\"\n    },\n    \"docType\": {\n      \"type\": \"string\",\n      \"description\": \"payslip, receipt or purchase\"\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"One or two plain sentences\"\n    }\n  }\n}"
+      },
+      "id": "ddc96efc-cab2-40f8-96d6-8156e5ee90ac",
+      "name": "Structured Output Parser (Receipt)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -784
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"vendor\": {\n      \"type\": \"string\"\n    },\n    \"txnDate\": {\n      \"type\": \"string\",\n      \"description\": \"Date printed on the receipt, YYYY-MM-DD\"\n    },\n    \"lineItems\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"price\": {\n            \"type\": \"number\",\n            \"description\": \"Unit price in integer cents\"\n          },\n          \"qty\": {\n            \"type\": \"number\"\n          },\n          \"category\": {\n            \"type\": \"string\",\n            \"description\": \"One of the fixed category list\"\n          },\n          \"direction\": {\n            \"type\": \"string\",\n            \"description\": \"expense or income\"\n          }\n        }\n      }\n    },\n    \"claimedTotalCents\": {\n      \"type\": \"number\"\n    },\n    \"confidenceScore\": {\n      \"type\": \"number\"\n    },\n    \"docType\": {\n      \"type\": \"string\",\n      \"description\": \"payslip, receipt or purchase\"\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"One or two plain sentences\"\n    }\n  }\n}"
+      },
+      "id": "5148ac96-1df3-4977-b401-ea67ff8f72fe",
+      "name": "Structured Output Parser (Doc)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        -160
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://aiconsole-api.myt.mu/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "myt ASR"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b9391234-22d7-4275-bf23-cc71b6603f03",
+      "name": "myt_asr",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        544,
+        576
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DYB9xdQ256LxD5EF",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.transcript }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Extract ONE money record from this transcript. The speaker may mix Kreol Morisien, French and English in the same sentence. The speaker is describing a payslip / salary received, a shop receipt, or a purchase. docType is \"payslip\", \"receipt\" or \"purchase\". itemName: short name of what was bought or received (\"Net salary\" for a payslip). vendor: the shop or employer if said, else empty. amountCents: the amount in integer cents (Rs 150 = 15000). Kreol numbers: enn 1, de 2, trwa 3, kat 4, sink 5, sis 6, set 7, wit 8, nef 9, dis 10, douz 12, vinn 20, trant 30, karant 40, sinkant 50, san 100, mil 1000. \"karant mil\" = 40000 rupees. \"40k\" = 40000 rupees. direction: \"income\" for money received (a payslip is always income), otherwise \"expense\". category: one of groceries, dining, transport, fuel, utilities, rent, telecom, health, education, clothing, household, entertainment, subscriptions, gifts, festival, salary, other (a payslip is salary). summary: one or two plain English sentences saying what you understood. If the amount or the type is unclear, set confidenceScore below 0.5. Output a confidenceScore (0.0-1.0). Do no other arithmetic."
+            },
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ $json.text }}"
+            }
+          ]
+        }
+      },
+      "id": "c30ec06e-c71b-471b-ade6-f9908d045bc1",
+      "name": "Claude Voice Parse",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        752,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"docType\": {\n      \"type\": \"string\",\n      \"description\": \"payslip, receipt or purchase\"\n    },\n    \"itemName\": {\n      \"type\": \"string\"\n    },\n    \"vendor\": {\n      \"type\": \"string\"\n    },\n    \"amountCents\": {\n      \"type\": \"number\",\n      \"description\": \"Integer cents\"\n    },\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"One of the fixed category list\"\n    },\n    \"direction\": {\n      \"type\": \"string\",\n      \"description\": \"income or expense\"\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"One or two plain sentences\"\n    },\n    \"confidenceScore\": {\n      \"type\": \"number\"\n    }\n  }\n}"
+      },
+      "id": "6e4afa5f-7053-4c8e-a115-4956782a839d",
+      "name": "Structured Output Parser (Voice)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1,
+      "position": [
+        880,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Receipt/Document Guardrail (Python Code node) ---\n# Mode: Run Once for All Items. Needs stdlib allow: re, datetime\nimport re\nfrom datetime import datetime, timedelta, timezone\n \n# --- Config ---\nMAURITIUS_TZ = timezone(timedelta(hours=4))  # Mauritius has no daylight saving\nCONFIDENCE_THRESHOLD = 0.7\nALLOWED_CATEGORIES = {\n    \"groceries\", \"dining\", \"transport\", \"fuel\", \"utilities\", \"rent\", \"telecom\",\n    \"health\", \"education\", \"clothing\", \"household\", \"entertainment\",\n    \"subscriptions\", \"gifts\", \"festival\", \"salary\", \"other\",\n}\nSOURCE_BY_INPUT_TYPE = {\"receipt\": \"receipt\", \"document\": \"document\",\n                        \"voiceNote\": \"voice\"}\nALLOWED_DOC_TYPES = {\"payslip\", \"receipt\", \"purchase\"}\n \n \n# --- Helpers ---\ndef today_in_mauritius():\n    return datetime.now(MAURITIUS_TZ).strftime(\"%Y-%m-%d\")\n \n \ndef clean_date(raw_date):\n    \"\"\"Return (YYYY-MM-DD, where the date came from).\"\"\"\n    if isinstance(raw_date, str) and re.fullmatch(r\"\\d{4}-\\d{2}-\\d{2}\", raw_date):\n        try:\n            datetime.strptime(raw_date, \"%Y-%m-%d\")\n            return raw_date, \"provided\"\n        except ValueError:\n            pass\n    return today_in_mauritius(), \"defaulted\"\n \n \ndef to_int_cents(value):\n    try:\n        return int(round(float(value)))\n    except (TypeError, ValueError):\n        return 0\n \n \ndef to_positive_qty(value):\n    try:\n        quantity = float(value)\n    except (TypeError, ValueError):\n        return 1.0\n    return quantity if quantity > 0 else 1.0\n \n \n# --- Input: AI output merged with the verified request ---\nmerged_item = _items[0][\"json\"]\nai_output = merged_item.get(\"output\", merged_item)  # some n8n versions nest it\n \nline_items = []\nfor raw_line in ai_output.get(\"lineItems\") or []:\n    category = str(raw_line.get(\"category\") or \"other\").strip().lower()\n    line_items.append({\n        \"name\": raw_line.get(\"name\") or \"item\",\n        \"price\": to_int_cents(raw_line.get(\"price\")),\n        \"qty\": to_positive_qty(raw_line.get(\"qty\")),\n        \"category\": category if category in ALLOWED_CATEGORIES else \"other\",\n        \"direction\": \"income\" if raw_line.get(\"direction\") == \"income\" else \"expense\",\n    })\n \nclaimed_total = to_int_cents(ai_output.get(\"claimedTotalCents\"))\nconfidence = float(ai_output.get(\"confidenceScore\") or 0)  # missing score fails safe\ntxn_date, date_source = clean_date(ai_output.get(\"txnDate\"))\n \n# --- Deterministic checks (integer cents, no floats saved) ---\ncalculated_total = sum(\n    int(round(line[\"price\"] * line[\"qty\"])) for line in line_items\n)\n \nflags = []\nif not line_items:\n    flags.append(\"No line items were read.\")\nelif calculated_total <= 0:\n    flags.append(\"No amount was read.\")\nif calculated_total != claimed_total:\n    flags.append(\"Line items do not sum to the stated total.\")\nif confidence < CONFIDENCE_THRESHOLD:\n    flags.append(\"AI confidence below 0.7.\")\n \ndoc_type = str(ai_output.get(\"docType\") or merged_item.get(\"docType\") or \"\").strip().lower()\nsummary = str(ai_output.get(\"summary\") or merged_item.get(\"summary\") or \"\").strip()\n\n# --- Output: a preview only. Saving happens on the confirmTransaction route. ---\nreturn [{\"json\": {\n    \"success\": True,\n    \"saved\": False,\n    \"record\": \"preview\",\n    \"docType\": doc_type if doc_type in ALLOWED_DOC_TYPES else \"purchase\",\n    \"summary\": summary or \"The AI could not describe this input.\",\n    \"lowConfidence\": confidence < CONFIDENCE_THRESHOLD,\n    \"vendor\": ai_output.get(\"vendor\"),\n    \"totalCents\": calculated_total,\n    \"lineItems\": line_items,\n    \"flags\": flags,\n    \"requiresValidation\": len(flags) > 0,\n    \"txnDate\": txn_date,\n    \"dateSource\": date_source,\n    \"confidenceScore\": confidence,\n    \"source\": SOURCE_BY_INPUT_TYPE.get(merged_item.get(\"inputType\"), \"document\"),\n}}]\n"
+      },
+      "id": "192c54ad-d346-46d2-9afb-f77d819b3741",
+      "name": "Receipt/Document Guardrail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Transaction Prep (Python Code node) ---\n# Input comes from the \"Get Routine History\" aggregate: one item holding the\n# approved receipt (request) and the months each category was seen before.\n# Mode: Run Once for All Items. No imports needed.\n \n# --- Input ---\naggregate_item = _items[0][\"json\"]\napproved = aggregate_item.get(\"request\") or {}\nuser_id = aggregate_item[\"userId\"]  # injected from the verified token\n \nmonths_by_category = {}\nfor group in aggregate_item.get(\"routineMonths\") or []:\n    category = group.get(\"_id\") or \"uncategorized\"\n    months_by_category[category] = {month for month in group.get(\"months\") or []\n                                    if month}\n \n \n# --- Routine rule (unchanged): same category seen in 2+ distinct past months ---\ndef is_routine(category):\n    return len(months_by_category.get(category, set())) >= 2\n \n \n# --- Build one transaction document per line item ---\ntransaction_docs = []\nfor line in approved.get(\"lineItems\") or []:\n    category = line.get(\"category\", \"uncategorized\")\n    transaction_docs.append({\n        \"userId\": user_id,\n        \"amount\": int(round(line.get(\"price\", 0) * line.get(\"qty\", 1))),\n        \"direction\": line.get(\"direction\", \"expense\"),\n        \"category\": category,\n        \"isRoutine\": is_routine(category),\n        \"txnDate\": approved.get(\"txnDate\"),\n        \"source\": approved.get(\"source\", \"document\"),\n        \"status\": \"VERIFIED\",\n    })\n \n# --- Output: original format plus totals for the acknowledgement ---\nreturn [{\"json\": {\n    \"transactions\": transaction_docs,\n    \"totalCents\": sum(doc[\"amount\"] for doc in transaction_docs),\n    \"vendor\": approved.get(\"vendor\"),\n    \"count\": len(transaction_docs),\n}}]\n"
+      },
+      "id": "d3643628-9623-434b-8837-a5f1ee9429b5",
+      "name": "Transaction Prep",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Merge User & Txns (Python Code node) ---\n# Input comes from the \"Get User & Txns\" aggregate: one item with\n# profile[], transactions[] and the original request.\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n \nMAURITIUS_TZ = timezone(timedelta(hours=4))\n \n# --- Input ---\naggregate_item = _items[0][\"json\"]\nrequest = aggregate_item.get(\"request\") or {}\nprofile_rows = aggregate_item.get(\"profile\") or []\nuser_profile = profile_rows[0] if profile_rows else {}\n \n# A Firebase account exists before any Mongo profile does, so check for one.\nprofile_complete = bool(user_profile) and user_profile.get(\"salary\") is not None\n \ntarget_cents = request.get(\"targetAmountCents\", request.get(\"targetAmount\"))\nintent = request.get(\"intent\") or request.get(\"inputType\")\n \n# --- Output: the exact shape the Affordability Algorithm expects ---\nreturn [{\"json\": {\n    \"userId\": aggregate_item[\"userId\"],\n    \"user\": user_profile,\n    \"transactions\": aggregate_item.get(\"transactions\") or [],\n    \"targetAmountCents\": int(target_cents or 0),\n    \"intent\": intent,\n    \"itemName\": request.get(\"itemName\"),\n    \"link\": request.get(\"link\"),\n    \"goalType\": request.get(\"goalType\") or (\"product\" if request.get(\"itemName\")\n                                            else \"cash\"),\n    \"goalKey\": request.get(\"goalKey\"),\n    \"savedAmountCents\": int(request.get(\"savedAmountCents\") or 0),\n    \"profileComplete\": profile_complete,\n    \"today\": datetime.now(MAURITIUS_TZ).strftime(\"%Y-%m-%d\"),\n}}]\n"
+      },
+      "id": "8ce63251-7b53-4c1c-8296-b7e0a762d55f",
+      "name": "Merge User & Txns",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Affordability Algorithm (Python Code node) ---\n# Mode: Run Once for All Items.\n# Needs stdlib allow: datetime. External allow: holidays, dateutil\nfrom datetime import date\n \nimport holidays\nfrom dateutil.relativedelta import relativedelta\n \n# --- Config (team-tuned spike weights, integer cents) ---\nMAX_MONTHS = 120\n# Keys are the exact holiday names from holidays.Mauritius; matched with startswith.\nFESTIVAL_SPIKE_CENTS = {\n    \"New Year's Day\": 400000,\n    \"Thaipoosam Cavadee\": 400000,\n    \"Maha Shivaratree\": 350000,\n    \"Chinese Spring Festival\": 350000,\n    \"Eid-ul-Fitr\": 300000,          # library adds \" (estimated)\"\n    \"Ougadi\": 300000,\n    \"Ganesh Chaturthi\": 250000,\n    \"Divali\": 600000,\n    \"Christmas Day\": 900000,\n}\n# Events the library does not list, as (month, name, cents). Add as the team decides.\nMANUAL_EVENTS = []                  # e.g. [(9, \"Pere Laval pilgrimage\", 250000)]\nRESERVE_UPCOMING_FESTIVALS = True  # hold back festivals due soon\nRESERVE_WINDOW_DAYS = 60\n \n# --- Input (built by Merge User & Txns) ---\nitem = _items[0][\"json\"]\nuser = item.get(\"user\") or {}\ntxns = item.get(\"transactions\") or []\ntarget = int(item.get(\"targetAmountCents\") or 0)\ntoday = date.fromisoformat(item[\"today\"])  # Mauritius date, not the server clock\n \npassthrough = {\n    \"userId\": item[\"userId\"],\n    \"intent\": item.get(\"intent\"),\n    \"itemName\": item.get(\"itemName\"),\n    \"link\": item.get(\"link\"),\n    \"goalType\": item.get(\"goalType\"),\n    \"targetAmountCents\": target,\n    \"goalKey\": item.get(\"goalKey\"),\n    \"savedAmountCents\": int(item.get(\"savedAmountCents\") or 0),\n}\n \n# --- Guard: Firebase account exists but no financial profile yet ---\nif not item.get(\"profileComplete\"):\n    return [{\"json\": {**passthrough, \"verdict\": \"NEEDS_PROFILE\", \"monthsNeeded\": 0,\n                      \"inferredBalance\": 0, \"safeToSpend\": 0, \"reachable\": False}}]\n \n# --- Step 1: inferred balance ---\nif user.get(\"manualBalance\") is not None:\n    balance = int(user[\"manualBalance\"])\n    cutoff = str(user.get(\"manualBalanceDate\") or \"\")\n    recent = [t for t in txns if str(t.get(\"txnDate\")) > cutoff]\nelse:\n    balance, recent = 0, txns\nfor t in recent:\n    amount = int(t.get(\"amount\", 0))\n    balance += amount if t.get(\"direction\") == \"income\" else -amount\n \n# --- Step 2: routine monthly baseline (integer cents) ---\nroutine = [t for t in txns if t.get(\"isRoutine\") and t.get(\"direction\") == \"expense\"]\nmonths_seen = len({str(t.get(\"txnDate\"))[:7] for t in routine}) or 1\nmonthly_routine = sum(int(t.get(\"amount\", 0)) for t in routine) // months_seen\n \n# --- Step 3: monthly income ---\nmonthly_income = int(user.get(\"salary\") or 0)\n \n# --- Step 4: festival spikes as dated events, summed per (year, month) ---\nyears_needed = range(today.year, today.year + MAX_MONTHS // 12 + 2)\nfestival_events = []  # (date, cents)\nfor holiday_date, holiday_name in holidays.Mauritius(years=years_needed).items():\n    for festival_name, spike_cents in FESTIVAL_SPIKE_CENTS.items():\n        if holiday_name.startswith(festival_name):\n            festival_events.append((holiday_date, spike_cents))\nfor year in years_needed:\n    for month, _event_name, spike_cents in MANUAL_EVENTS:\n        festival_events.append((date(year, month, 1), spike_cents))\n \nspike_by_month = {}\nfor event_date, spike_cents in festival_events:\n    key = (event_date.year, event_date.month)\n    spike_by_month[key] = spike_by_month.get(key, 0) + spike_cents\n \n \ndef surplus_for(month_date):\n    spike = spike_by_month.get((month_date.year, month_date.month), 0)\n    return (monthly_income - monthly_routine) - spike\n \n \n# --- Step 5: buffer + safe-to-spend now ---\nbuffer = monthly_routine * int(user.get(\"bufferWeeks\") or 4) // 4\nsafe_base = balance - buffer\nreserve_until = today + relativedelta(days=RESERVE_WINDOW_DAYS)\nfestival_reserve = sum(\n    cents for event_date, cents in festival_events\n    if today <= event_date <= reserve_until\n) if RESERVE_UPCOMING_FESTIVALS else 0\nsafe_now = safe_base - festival_reserve\n \n# --- Step 6: verdict / timeline ---\nreachable = True\nif target <= safe_now:\n    verdict, months = \"SAFE\", 0\nelif target <= safe_now + buffer:\n    verdict, months = \"TIGHT\", 0\nelse:\n    # Timeline starts from the base, then subtracts each month's spikes once.\n    still_due_this_month = sum(\n        cents for event_date, cents in festival_events\n        if event_date >= today\n        and (event_date.year, event_date.month) == (today.year, today.month)\n    )\n    verdict, months, cursor = \"NOT_SAFE\", 0, today\n    accumulated = safe_base - still_due_this_month\n    while accumulated < target and months < MAX_MONTHS:\n        cursor += relativedelta(months=1)\n        accumulated += surplus_for(cursor)\n        months += 1\n    reachable = accumulated >= target\n \n# --- Output: original keys plus passthrough for the goal save ---\nreturn [{\"json\": {\n    **passthrough,\n    \"verdict\": verdict,\n    \"monthsNeeded\": months,\n    \"inferredBalance\": balance,\n    \"safeToSpend\": safe_now,\n    \"reachable\": reachable,\n}}]\n"
+      },
+      "id": "cfc59b35-a82a-40b0-8be2-6666cbcceb83",
+      "name": "Affordability Algorithm",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "transactions",
+        "query": "==[\n  { \"$match\": { \"userId\": \"{{ $json.userId }}\", \"direction\": \"expense\" } },\n  { \"$facet\": {\n      \"thisPeriod\": [\n        { \"$match\": { \"txnDate\": {\n            \"$gte\": \"{{ $now.minus({ days: 30 }).toFormat('yyyy-MM-dd') }}\" } } },\n        { \"$group\": { \"_id\": \"$category\", \"totalCents\": { \"$sum\": \"$amount\" } } }\n      ],\n      \"lastPeriod\": [\n        { \"$match\": { \"txnDate\": {\n            \"$gte\": \"{{ $now.minus({ days: 60 }).toFormat('yyyy-MM-dd') }}\",\n            \"$lt\": \"{{ $now.minus({ days: 30 }).toFormat('yyyy-MM-dd') }}\" } } },\n        { \"$group\": { \"_id\": \"$category\", \"totalCents\": { \"$sum\": \"$amount\" } } }\n      ]\n  } },\n  { \"$project\": {\n      \"userId\": { \"$literal\": \"{{ $json.userId }}\" },\n      \"thisPeriod\": { \"$arrayToObject\": { \"$map\": {\n          \"input\": \"$thisPeriod\", \"as\": \"row\",\n          \"in\": { \"k\": { \"$ifNull\": [ \"$$row._id\", \"uncategorized\" ] },\n                  \"v\": \"$$row.totalCents\" } } } },\n      \"lastPeriod\": { \"$arrayToObject\": { \"$map\": {\n          \"input\": \"$lastPeriod\", \"as\": \"row\",\n          \"in\": { \"k\": { \"$ifNull\": [ \"$$row._id\", \"uncategorized\" ] },\n                  \"v\": \"$$row.totalCents\" } } } }\n  } }\n]\n"
+      },
+      "id": "b8bb7949-a3df-4d3b-9db0-b27c6445282a",
+      "name": "Mongo Aggregate Periods",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        2864,
+        752
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Spending Trend Summary (Python Code node) ---\n# Mode: Run Once for All Items. No imports needed.\n \n# --- Config ---\nNOISE_FLOOR_CENTS = 30000   # ignore shifts under Rs 300\nMIN_CHANGE_PCT = 15\nTOP_N = 3\n \n \n# --- Helper: accept {category: cents} or [{_id, totalCents}] ---\ndef to_category_map(period_data):\n    if isinstance(period_data, dict):\n        return {str(k): int(v or 0) for k, v in period_data.items()}\n    category_map = {}\n    for row in period_data or []:\n        category = row.get(\"_id\") or \"uncategorized\"\n        category_map[category] = category_map.get(category, 0) + int(\n            row.get(\"totalCents\") or 0)\n    return category_map\n \n \n# --- Input: one document from Mongo Aggregate Periods ---\nitem = _items[0][\"json\"]\nthis_period = to_category_map(item.get(\"thisPeriod\"))\nlast_period = to_category_map(item.get(\"lastPeriod\"))\n \nmovers = []\nfor category in set(this_period) | set(last_period):\n    current_cents = this_period.get(category, 0)\n    previous_cents = last_period.get(category, 0)\n    diff_cents = current_cents - previous_cents\n    if abs(diff_cents) < NOISE_FLOOR_CENTS:\n        continue\n    pct_change = 100 if previous_cents == 0 else round(diff_cents / previous_cents * 100)\n    if abs(pct_change) >= MIN_CHANGE_PCT:\n        movers.append({\n            \"category\": category,\n            \"direction\": \"up\" if diff_cents > 0 else \"down\",\n            \"changePct\": abs(pct_change),\n            \"netDiffCents\": abs(diff_cents),\n        })\n \nmovers.sort(key=lambda mover: mover[\"netDiffCents\"], reverse=True)\n \n# --- Output: unchanged format ---\nif not movers:\n    return [{\"json\": {\"userId\": item.get(\"userId\"), \"summaryData\": None}}]\nreturn [{\"json\": {\n    \"userId\": item.get(\"userId\"),\n    \"topMovers\": movers[:TOP_N],\n    \"period\": \"last 30 days\",\n}}]\n"
+      },
+      "id": "c2a70cce-cfeb-44ed-a19c-7b2179e456da",
+      "name": "Spending Trend Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3056,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "transactions",
+        "fields": "userId,amount,direction,category,isRoutine,txnDate,source,status",
+        "options": {}
+      },
+      "id": "82c9d6bc-0ed1-465b-9438-dc872df9905d",
+      "name": "MongoDB - Insert Txns",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        3040,
+        -176
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "fileData",
+        "options": {
+          "mimeType": "={{ $json.mimeType || 'audio/webm' }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        576
+      ],
+      "id": "bce14098-8fdb-4853-b5d0-fc935e1d2dde",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1104,
+        576
+      ],
+      "id": "1c61cab2-03a7-4e74-bcc9-93e086c97b14",
+      "name": "Attach Identity(Voice)"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Voice Router (Python Code node, after the Voice Parse) ---\n# Turns the parsed voice note into the same preview shape the receipt AI returns.\n# Nothing is saved here: the user confirms first (confirmTransaction route).\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n\n# --- Config ---\nMAURITIUS_TZ = timezone(timedelta(hours=4))\n\n# --- Input: parse output merged with the verified request ---\nmerged_item = _items[0][\"json\"]\nparsed = merged_item.get(\"output\", merged_item)\n\ntry:\n    amount_cents = int(round(float(parsed.get(\"amountCents\") or 0)))\nexcept (TypeError, ValueError):\n    amount_cents = 0\nitem_name = (parsed.get(\"itemName\") or \"\").strip()\ndirection = \"income\" if parsed.get(\"direction\") == \"income\" else \"expense\"\n\n# --- Output: one line item, same shape as the receipt AI output ---\nreturn [{\"json\": {\n    \"userId\": merged_item.get(\"userId\"),\n    \"inputType\": \"voiceNote\",\n    \"docType\": parsed.get(\"docType\"),\n    \"summary\": parsed.get(\"summary\"),\n    \"vendor\": (parsed.get(\"vendor\") or \"\").strip() or None,\n    \"lineItems\": [{\n        \"name\": item_name or \"voice entry\",\n        \"price\": amount_cents,\n        \"qty\": 1,\n        \"category\": parsed.get(\"category\") or (\"salary\" if direction == \"income\"\n                                              else \"other\"),\n        \"direction\": direction,\n    }],\n    \"claimedTotalCents\": amount_cents,\n    \"confidenceScore\": parsed.get(\"confidenceScore\") or 0,\n    \"txnDate\": datetime.now(MAURITIUS_TZ).strftime(\"%Y-%m-%d\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        576
+      ],
+      "id": "a84ec731-f1b1-4f96-b5da-b8737fe19c6f",
+      "name": "Voice Router"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2368,
+        -544
+      ],
+      "id": "a773df28-6eeb-4311-a4e4-95514d2bfd20",
+      "name": "Respond Preview"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-receipt",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "receipt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "receipt"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-document",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-voiceNote",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "voiceNote",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voiceNote"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-goal",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "goal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "goal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-afford",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "afford",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "afford"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-summary",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "summary",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "summary"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-profile",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "profile",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "profile"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-confirmTransaction",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "confirmTransaction",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmTransaction"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5c9d63bb-645c-44cc-ad14-368602dca833",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "updateGoal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "updateGoal"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "1c1b263a-7986-449d-8743-e997cb0c2d18",
+      "name": "Switch on body.inputType1",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        96,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Profile Prep (Python Code node, new \"profile\" route) ---\n# Called once right after Firebase signup, and whenever the user edits\n# salary or balance. Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n \nMAURITIUS_TZ = timezone(timedelta(hours=4))\n \n \ndef non_negative_cents(value, field_name):\n    cents = int(round(float(value)))\n    if cents < 0:\n        raise Exception(\"INVALID_PROFILE: \" + field_name + \" cannot be negative\")\n    return cents\n \n \n# --- Input: Auth Bouncer output ---\nrequest = _items[0][\"json\"]\nnow_mu = datetime.now(MAURITIUS_TZ)\n \nbuffer_weeks = int(request.get(\"bufferWeeks\") or 4)\nbuffer_weeks = min(max(buffer_weeks, 1), 12)\n \n# --- Output: users collection document (keyed by the Firebase UID) ---\nreturn [{\"json\": {\n    \"userId\": request[\"userId\"],\n    \"email\": request.get(\"email\"),\n    \"salary\": non_negative_cents(request.get(\"salaryCents\", 0), \"salary\"),\n    \"manualBalance\": non_negative_cents(request.get(\"manualBalanceCents\", 0),\n                                        \"balance\"),\n    \"manualBalanceDate\": now_mu.strftime(\"%Y-%m-%d\"),\n    \"bufferWeeks\": buffer_weeks,\n    \"updatedAt\": now_mu.isoformat(timespec=\"seconds\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        16
+      ],
+      "id": "b9044f9e-a8de-49f7-8cb5-f03853d16638",
+      "name": "Profile Prep"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "userId",
+        "fields": "userId,email,salary,manualBalance,manualBalanceDate,bufferWeeks,updatedAt",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        3040,
+        16
+      ],
+      "id": "c1c49a42-f1fa-4367-8e50-ea1ae0e685f0",
+      "name": "Upsert Profile",
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Confirm Check (Python Code node, new \"confirmTransaction\" route) ---\n# Runs when the user taps \"Yes, save it\" in the review modal.\n# Mode: Run Once for All Items. Needs stdlib allow: re, datetime\nimport re\nfrom datetime import datetime, timedelta, timezone\n \n# --- Config ---\nMAURITIUS_TZ = timezone(timedelta(hours=4))\nALLOWED_SOURCES = {\"receipt\", \"document\", \"voice\", \"manual\"}\nALLOWED_CATEGORIES = {\n    \"groceries\", \"dining\", \"transport\", \"fuel\", \"utilities\", \"rent\", \"telecom\",\n    \"health\", \"education\", \"clothing\", \"household\", \"entertainment\",\n    \"subscriptions\", \"gifts\", \"festival\", \"salary\", \"other\",\n}\n \n \n# --- Helpers ---\ndef valid_date_or_today(raw_date):\n    if isinstance(raw_date, str) and re.fullmatch(r\"\\d{4}-\\d{2}-\\d{2}\", raw_date):\n        try:\n            datetime.strptime(raw_date, \"%Y-%m-%d\")\n            return raw_date\n        except ValueError:\n            pass\n    return datetime.now(MAURITIUS_TZ).strftime(\"%Y-%m-%d\")\n \n \n# --- Input: Auth Bouncer output (body fields + verified userId) ---\nrequest = _items[0][\"json\"]\nraw_lines = request.get(\"lineItems\") or []\nif not raw_lines:\n    raise Exception(\"INVALID_CONFIRMATION: no line items sent\")\n \nline_items = []\nfor raw_line in raw_lines:\n    price = int(round(float(raw_line.get(\"price\", 0))))\n    quantity = float(raw_line.get(\"qty\") or 1)\n    if price < 0 or quantity <= 0:\n        raise Exception(\"INVALID_CONFIRMATION: negative price or zero quantity\")\n    category = str(raw_line.get(\"category\") or \"other\").strip().lower()\n    line_items.append({\n        \"name\": raw_line.get(\"name\") or \"item\",\n        \"price\": price,\n        \"qty\": quantity,\n        \"category\": category if category in ALLOWED_CATEGORIES else \"other\",\n        \"direction\": \"income\" if raw_line.get(\"direction\") == \"income\" else \"expense\",\n    })\n \nconfirmed_total = sum(int(round(line[\"price\"] * line[\"qty\"])) for line in line_items)\nsource = request.get(\"source\") if request.get(\"source\") in ALLOWED_SOURCES else \"manual\"\n \n# --- Output: same shape as the Guardrail, already approved by the user ---\nreturn [{\"json\": {\n    \"userId\": request[\"userId\"],\n    \"vendor\": request.get(\"vendor\"),\n    \"totalCents\": confirmed_total,\n    \"lineItems\": line_items,\n    \"flags\": [],\n    \"requiresValidation\": False,\n    \"txnDate\": valid_date_or_today(request.get(\"txnDate\")),\n    \"dateSource\": \"user\",\n    \"confidenceScore\": 1.0,\n    \"source\": source,\n    \"docType\": str(request.get(\"docType\") or \"\").strip().lower(),\n    \"incomeCents\": sum(int(round(line[\"price\"] * line[\"qty\"])) for line in line_items\n                       if line[\"direction\"] == \"income\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        160
+      ],
+      "id": "e8556947-8177-49c0-b478-55196c4c97d4",
+      "name": "Confirm Check"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Auth Bouncer (Python Code node, replaces the HTTP Firebase Gatekeeper) ---\n# Mode: Run Once for All Items. Needs stdlib allow: json, urllib\nimport json\nimport urllib.error\nimport urllib.request\n \n# --- Config ---\n# Firebase Web API keys are public by design: the same key ships in the React app.\nFIREBASE_WEB_API_KEY = \"AIzaSyClep1OeRQHb18zuwGblC8ld6Eak5_wnso\"\nLOOKUP_URL = (\n    \"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=\"\n    + FIREBASE_WEB_API_KEY\n)\nIDENTITY_FIELDS = (\"userId\", \"email\")\n \n# --- Read the webhook request ---\nwebhook_item = _items[0][\"json\"]\nrequest_headers = webhook_item.get(\"headers\") or {}\nrequest_body = webhook_item.get(\"body\") or {}\n \nauth_header = request_headers.get(\"authorization\", \"\")\nif auth_header.lower().startswith(\"bearer \"):\n    id_token = auth_header[7:].strip()\nelse:\n    id_token = \"\"\n \nif not id_token:\n    raise Exception(\"UNAUTHORIZED: missing Bearer token\")\n \n# --- Verify the ID token with Google ---\nlookup_payload = json.dumps({\"idToken\": id_token}).encode(\"utf-8\")\nlookup_request = urllib.request.Request(\n    LOOKUP_URL,\n    data=lookup_payload,\n    headers={\"Content-Type\": \"application/json\"},\n    method=\"POST\",\n)\ntry:\n    with urllib.request.urlopen(lookup_request, timeout=10) as google_response:\n        lookup_result = json.loads(google_response.read().decode(\"utf-8\"))\nexcept urllib.error.HTTPError:\n    raise Exception(\"UNAUTHORIZED: token rejected by Google\")\n \nfirebase_users = lookup_result.get(\"users\") or []\nif not firebase_users:\n    raise Exception(\"UNAUTHORIZED: no Firebase user for this token\")\n \nverified_user = firebase_users[0]\n \n# --- Output: the request body plus the verified identity ---\n# Any userId or email sent by the client is dropped and replaced.\nsafe_body = {\n    key: value for key, value in request_body.items() if key not in IDENTITY_FIELDS\n}\nreturn [{\"json\": {\n    **safe_body,\n    \"userId\": verified_user[\"localId\"],\n    \"email\": verified_user.get(\"email\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        160
+      ],
+      "id": "ef88f76d-1dcd-4448-9eba-4f2d0d2a38e4",
+      "name": "Code in Python",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"error\": \"UNAUTHORIZED\" }",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        48,
+        336
+      ],
+      "id": "6cde4184-171b-4aab-9d6f-32c4a096c353",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "fileData",
+        "options": {
+          "mimeType": "={{ $json.mimeType || 'image/jpeg' }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        -992
+      ],
+      "id": "62417926-f3a7-4b0e-86e5-a5e2a2662fd9",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        960,
+        -864
+      ],
+      "id": "e0d49ec1-9fc1-4acf-bf75-d8bf5d2d30d4",
+      "name": "Attach Identity Receipt"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "fileData",
+        "options": {
+          "mimeType": "application/pdf"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        -384
+      ],
+      "id": "4a5343bd-ce21-4802-bf7e-03a271972e76",
+      "name": "Document To File"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        -384
+      ],
+      "id": "181c5407-7945-4aa2-9f7c-56e487cff3ad",
+      "name": "Extract PDF Text"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        -160
+      ],
+      "id": "89146df7-0e5d-455d-95cf-58704f374a37",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iv1A4z5pHK5ZZsWj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract and categorize this document: {{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Expert auditor parsing Mauritian invoices and bank statements. Extract and categorize every line item. All amounts in integer MUR cents.   For each line item give: - name - price: the unit price in integer cents - qty: the quantity - category: one of groceries, dining, transport, fuel, utilities, rent, telecom, health,   education, clothing, household, entertainment, subscriptions, gifts, festival, salary,   other - direction: \"income\" for money received, otherwise \"expense\"   txnDate is the date printed on the document, formatted YYYY-MM-DD. claimedTotalCents is the total stated on the document, in integer cents. Output a confidenceScore (0.0-1.0). If the text is empty or unreadable, return no line items and a confidenceScore below 0.3. Do not perform verification maths. Also classify the document: docType is \"payslip\" (salary slip / payroll), \"receipt\" (till or shop receipt) or \"purchase\" (invoice, order or other purchase record). For a payslip, return ONE line item named \"Net salary\" with the net pay as price, qty 1, category salary, direction income, and claimedTotalCents equal to that net pay. summary is one or two plain sentences saying what the document is and the key amounts you read."
+            }
+          ]
+        }
+      },
+      "id": "06aa50ae-a566-4d4e-b38c-40b2cb643154",
+      "name": "Document Extract",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        896,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1312,
+        -320
+      ],
+      "id": "bbf20866-8b25-469a-abc1-39673a017bab",
+      "name": "Attach Identity(Document)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"error\": \"EXTRACTION_FAILED\", \"retry\": true }",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "a757d5d8-ee8f-4f28-8b89-b77afaa11af9",
+      "name": "Respond Extraction Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        -976
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "transactions",
+        "query": "=[\n  { \"$match\": { \"userId\": \"{{ $('Confirm Check').first().json.userId }}\" } },\n  { \"$facet\": {\n      \"routineMonths\": [\n        { \"$group\": {\n            \"_id\": \"$category\",\n            \"months\": { \"$addToSet\": {\n              \"$substrCP\": [ { \"$ifNull\": [ { \"$toString\": \"$txnDate\" }, \"\" ] }, 0, 7 ]\n            } }\n        } }\n      ]\n  } },\n  { \"$addFields\": {\n      \"userId\": \"{{ $('Confirm Check').first().json.userId }}\",\n      \"request\": { \"$literal\": {{ JSON.stringify($('Confirm Check').first().json) }} }\n  } }\n]\n"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        2368,
+        -176
+      ],
+      "id": "9111e887-53c3-40c9-a2a7-a05129fd180f",
+      "name": "Get Routine History",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "transactions",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -176
+      ],
+      "id": "c25a2167-4bbc-4f21-9734-b7c03cf9a9af",
+      "name": "Split Out Transactions"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "users",
+        "query": "=[\n  { \"$match\": { \"userId\": \"{{ $json.userId }}\" } },\n  { \"$facet\": {\n      \"profile\": [ { \"$limit\": 1 }, { \"$project\": { \"_id\": 0 } } ]\n  } },\n  { \"$lookup\": {\n      \"from\": \"transactions\",\n      \"pipeline\": [\n        { \"$match\": { \"userId\": \"{{ $json.userId }}\" } },\n        { \"$project\": { \"_id\": 0 } }\n      ],\n      \"as\": \"transactions\"\n  } },\n  { \"$addFields\": {\n      \"userId\": \"{{ $json.userId }}\",\n      \"request\": { \"$literal\": {{ JSON.stringify($json) }} }\n  } }\n]\n"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        2032,
+        368
+      ],
+      "id": "7f09864d-2676-4bbe-8a1e-b8a59a019cd9",
+      "name": "Get User & Txns",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-intent-goal",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "goal",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-verdict-profile",
+              "leftValue": "={{ $json.verdict }}",
+              "rightValue": "NEEDS_PROFILE",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "39e44aed-217d-47c8-9d79-b0a25c10c022",
+      "name": "Save as Goal?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Goal Doc Prep (Python Code node) ---\n# Runs only when intent == \"goal\". Builds the document for the goals upsert.\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n \nMAURITIUS_TZ = timezone(timedelta(hours=4))\n \n# --- Input: Affordability Algorithm output ---\nresult = _items[0][\"json\"]\n \n \n# --- Map the verdict onto the existing goals.status values ---\ndef goal_status(verdict, reachable):\n    if verdict == \"TIGHT\":\n        return \"tight\"\n    if verdict == \"NOT_SAFE\" and not reachable:\n        return \"stalled\"\n    return \"on-track\"\n \n \nitem_label = result.get(\"itemName\") or \"cash-\" + str(result.get(\"targetAmountCents\"))\n# An edit (updateGoal) keeps the key of the goal being edited.\ngoal_key = result.get(\"goalKey\") or (\n    result[\"userId\"] + \":\" + str(item_label).strip().lower())\n \n# --- Output: goals schema plus goalKey (the upsert match key) ---\nreturn [{\"json\": {\n    \"goalKey\": goal_key,\n    \"userId\": result[\"userId\"],\n    \"goalType\": result.get(\"goalType\") or \"product\",\n    \"itemName\": result.get(\"itemName\") or \"\",\n    \"targetAmount\": result.get(\"targetAmountCents\", 0),\n    \"link\": result.get(\"link\"),\n    \"savedAmount\": int(result.get(\"savedAmountCents\") or 0),\n    \"verdict\": result.get(\"verdict\"),\n    \"timelineMonths\": result.get(\"monthsNeeded\", 0),\n    \"status\": goal_status(result.get(\"verdict\"), result.get(\"reachable\", True)),\n    \"updatedAt\": datetime.now(MAURITIUS_TZ).isoformat(timespec=\"seconds\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        576
+      ],
+      "id": "ce3ae7cb-c977-443f-a21b-f964c1a6f14a",
+      "name": "Goal Doc Prep"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "goals",
+        "updateKey": "goalKey",
+        "fields": "goalKey,userId,goalType,itemName,targetAmount,savedAmount,verdict,link,timelineMonths,status,updatedAt",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        3040,
+        576
+      ],
+      "id": "6e3d8faf-9313-4448-9cb8-04f25c7ef2ef",
+      "name": "Upsert Goal",
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Build Acknowledgement (Python Code node, right before Final Respond) ---\n# Every branch ends here. Detects what arrived and returns a short receipt.\n# Mode: Run Once for All Items. No imports needed.\n \nincoming = [entry[\"json\"] for entry in _items]\nfirst = incoming[0] if incoming else {}\n \n \ndef ack(record, saved, message_key, **extra):\n    return [{\"json\": {\"success\": True, \"saved\": saved, \"record\": record,\n                      \"messageKey\": message_key, **extra}}]\n \n \n# --- Transactions inserted (one item per saved transaction) ---\nif \"amount\" in first and \"direction\" in first:\n    return ack(\"transaction\", True, \"TRANSACTION_SAVED\",\n               count=len(incoming),\n               totalCents=sum(int(doc.get(\"amount\", 0)) for doc in incoming),\n               ids=[doc.get(\"id\") or doc.get(\"_id\") for doc in incoming])\n \n# --- Goal upserted ---\nif \"goalKey\" in first:\n    return ack(\"goal\", True, \"GOAL_SAVED\",\n               goalKey=first.get(\"goalKey\"),\n               savedAmountCents=first.get(\"savedAmount\"),\n               verdict=first.get(\"verdict\"),\n               itemName=first.get(\"itemName\"),\n               timelineMonths=first.get(\"timelineMonths\"),\n               status=first.get(\"status\"))\n \n# --- Profile upserted (Firebase onboarding) ---\nif \"salary\" in first and \"bufferWeeks\" in first:\n    return ack(\"profile\", True, \"PROFILE_SAVED\")\n \n# --- Afford question: nothing saved, return the verdict ---\nif \"verdict\" in first:\n    return ack(\"afford\", False, \"AFFORD_\" + str(first[\"verdict\"]),\n               verdict=first[\"verdict\"],\n               monthsNeeded=first.get(\"monthsNeeded\"),\n               safeToSpendCents=first.get(\"safeToSpend\"),\n               reachable=first.get(\"reachable\", True))\n \n# --- Spending summary: nothing saved ---\nif \"topMovers\" in first or \"summaryData\" in first:\n    return ack(\"summary\", False, \"SUMMARY_READY\",\n               summary=first.get(\"topMovers\"))\n \nreturn ack(\"unknown\", False, \"NOTHING_TO_SAVE\")\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3264,
+        96
+      ],
+      "id": "0c47ee71-b74d-43b5-85df-83d2f7e10830",
+      "name": "Build Acknowledgement"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3488,
+        96
+      ],
+      "id": "856ecfc8-1820-4d0d-911f-10c6e1330175",
+      "name": "Final Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        752
+      ],
+      "id": "0f3e27f5-efe3-4de6-9786-e62240cc3be3",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iv1A4z5pHK5ZZsWj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-doc-payslip",
+              "leftValue": "={{ $json.docType }}",
+              "rightValue": "payslip",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-income-positive",
+              "leftValue": "={{ $json.incomeCents }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "75018f2e-b2bb-427f-8444-5f17827a28a1",
+      "name": "Is Payslip?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Salary Prep (Python Code node, confirmTransaction route) ---\n# A confirmed payslip sets the profile salary to its net pay.\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n\nMAURITIUS_TZ = timezone(timedelta(hours=4))\n\nconfirmed = _items[0][\"json\"]\nreturn [{\"json\": {\n    \"userId\": confirmed[\"userId\"],\n    \"salary\": int(confirmed[\"incomeCents\"]),\n    \"updatedAt\": datetime.now(MAURITIUS_TZ).isoformat(timespec=\"seconds\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        16
+      ],
+      "id": "6c7db33c-c92a-4909-957e-b8064345ed4e",
+      "name": "Salary Prep"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "userId",
+        "fields": "userId,salary,updatedAt",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        2816,
+        -80
+      ],
+      "id": "cc58631a-a1a1-400b-af81-ed0569e9ee0c",
+      "name": "Update Salary",
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Goal Update Prep (Python Code node, \"updateGoal\" route) ---\n# Edits an existing goal, then re-runs the Affordability Algorithm so the\n# verdict and timeline match the new amounts. Mode: Run Once for All Items.\n\n# --- Input: Auth Bouncer output (body fields + verified userId) ---\nrequest = _items[0][\"json\"]\nuser_id = request[\"userId\"]\ngoal_key = str(request.get(\"goalKey\") or \"\")\n\n# The key starts with the owner's Firebase UID, so users can only edit their own goals.\nif not goal_key.startswith(user_id + \":\"):\n    raise Exception(\"INVALID_GOAL: goal does not belong to this user\")\n\n\ndef cents(field_name, minimum):\n    try:\n        value = int(round(float(request.get(field_name))))\n    except (TypeError, ValueError):\n        raise Exception(\"INVALID_GOAL: \" + field_name + \" must be a number\")\n    if value < minimum:\n        raise Exception(\"INVALID_GOAL: \" + field_name + \" is too small\")\n    return value\n\n\n# --- Output: the same request shape the \"goal\" route sends ---\nreturn [{\"json\": {\n    \"userId\": user_id,\n    \"inputType\": \"goal\",\n    \"intent\": \"goal\",\n    \"goalKey\": goal_key,\n    \"itemName\": str(request.get(\"itemName\") or \"\").strip(),\n    \"goalType\": request.get(\"goalType\") or \"product\",\n    \"link\": request.get(\"link\") or None,\n    \"targetAmountCents\": cents(\"targetAmountCents\", 1),\n    \"savedAmountCents\": cents(\"savedAmountCents\", 0),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        368
+      ],
+      "id": "fe7de410-f326-490a-ad37-2844b4f8dd84",
+      "name": "Goal Update Prep"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"error\": \"UNKNOWN_INPUT_TYPE\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "e44452ec-2dc3-4ae7-ad6a-d993b4a0cc3b",
+      "name": "Respond Unknown Input",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        800
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser (Receipt)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Gemini Receipt Extract",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser (Doc)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Document Extract",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ],
+      "main": [
+        [
+          {
+            "node": "Respond Extraction Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gemini Receipt Extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "myt_asr": {
+      "main": [
+        [
+          {
+            "node": "Claude Voice Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser (Voice)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Claude Voice Parse",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt/Document Guardrail": {
+      "main": [
+        [
+          {
+            "node": "Respond Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Voice Parse": {
+      "main": [
+        [
+          {
+            "node": "Attach Identity(Voice)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Receipt Extract": {
+      "main": [
+        [
+          {
+            "node": "Attach Identity Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Extraction Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge User & Txns": {
+      "main": [
+        [
+          {
+            "node": "Affordability Algorithm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mongo Aggregate Periods": {
+      "main": [
+        [
+          {
+            "node": "Spending Trend Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB - Insert Txns": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transaction Prep": {
+      "main": [
+        [
+          {
+            "node": "Split Out Transactions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spending Trend Summary": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Affordability Algorithm": {
+      "main": [
+        [
+          {
+            "node": "Save as Goal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "myt_asr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Identity(Voice)": {
+      "main": [
+        [
+          {
+            "node": "Voice Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice Router": {
+      "main": [
+        [
+          {
+            "node": "Receipt/Document Guardrail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch on body.inputType1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach Identity Receipt",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Document To File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach Identity(Document)",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach Identity(Voice)",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Get User & Txns",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User & Txns",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mongo Aggregate Periods",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Profile Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirm Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Goal Update Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Unknown Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Profile Prep": {
+      "main": [
+        [
+          {
+            "node": "Upsert Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Check": {
+      "main": [
+        [
+          {
+            "node": "Is Payslip?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Switch on body.inputType1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Gemini Receipt Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Identity Receipt": {
+      "main": [
+        [
+          {
+            "node": "Receipt/Document Guardrail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document To File": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Document Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Document Extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Extract": {
+      "main": [
+        [
+          {
+            "node": "Attach Identity(Document)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Identity(Document)": {
+      "main": [
+        [
+          {
+            "node": "Receipt/Document Guardrail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Routine History": {
+      "main": [
+        [
+          {
+            "node": "Transaction Prep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Transactions": {
+      "main": [
+        [
+          {
+            "node": "MongoDB - Insert Txns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User & Txns": {
+      "main": [
+        [
+          {
+            "node": "Merge User & Txns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save as Goal?": {
+      "main": [
+        [
+          {
+            "node": "Goal Doc Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Goal Doc Prep": {
+      "main": [
+        [
+          {
+            "node": "Upsert Goal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Goal": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Profile": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Acknowledgement": {
+      "main": [
+        [
+          {
+            "node": "Final Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Claude Voice Parse",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Payslip?": {
+      "main": [
+        [
+          {
+            "node": "Salary Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Routine History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salary Prep": {
+      "main": [
+        [
+          {
+            "node": "Update Salary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Salary": {
+      "main": [
+        [
+          {
+            "node": "Get Routine History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Goal Update Prep": {
+      "main": [
+        [
+          {
+            "node": "Get User & Txns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6bf53e6d-b753-4c62-9cff-02f73237492d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c934b69b0fad126a3e318f3766991e8e47dc0cb7674edfe67093d98ad1242ce2"
+  },
+  "nodeGroups": [],
+  "id": "RnnUcY4347kkjs2q",
+  "tags": []
+}
