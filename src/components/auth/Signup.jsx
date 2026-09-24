@@ -29,10 +29,10 @@ export default function Signup() {
 
     // The account exists now, so a failed profile call must not block the user.
     try {
-      // create the users profile row (salary optional, editable later)
+      // Create the profile row. A blank salary stays empty, so the app asks for a payslip later.
       await callN8n({
         inputType: "profile",
-        salaryCents: salary ? Math.round(Number(salary) * 100) : 0,
+        ...(salary ? { salaryCents: Math.round(Number(salary) * 100) } : {}),
       });
     } catch (err) {
       console.error("Profile creation failed:", err);

@@ -6,7 +6,9 @@
         "httpMethod": "POST",
         "path": "api/v1/process",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {
+          "allowedOrigins": "*"
+        }
       },
       "id": "74ce15a4-e6c0-468b-aca4-d2a4f70a0440",
       "name": "Webhook",
@@ -30,7 +32,9 @@
             },
             {
               "type": "HumanMessagePromptTemplate",
-              "message": "Type: Image (Binary). Image Data Field Name: data"
+              "messageType": "imageBinary",
+              "binaryImageDataKey": "data",
+              "imageDetail": "auto"
             }
           ]
         }
@@ -49,12 +53,15 @@
     },
     {
       "parameters": {
-        "options": {}
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0
+        }
       },
       "id": "4976b7e7-e87c-452b-b472-5155b3cce6d3",
-      "name": "Google Gemini Chat Model",
+      "name": "Receipt Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         544,
         -784
@@ -90,10 +97,7 @@
       "position": [
         1040,
         -160
-      ],
-      "retryOnFail": true,
-      "waitBetweenTries": 5000,
-      "onError": "continueErrorOutput"
+      ]
     },
     {
       "parameters": {
@@ -131,33 +135,31 @@
           "id": "DYB9xdQ256LxD5EF",
           "name": "Header Auth account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.transcript }}",
+        "text": "={{ $json.text || $json.transcript }}",
         "hasOutputParser": true,
         "messages": {
           "messageValues": [
             {
               "message": "Extract ONE money record from this transcript. The speaker may mix Kreol Morisien, French and English in the same sentence. The speaker is describing a payslip / salary received, a shop receipt, or a purchase. docType is \"payslip\", \"receipt\" or \"purchase\". itemName: short name of what was bought or received (\"Net salary\" for a payslip). vendor: the shop or employer if said, else empty. amountCents: the amount in integer cents (Rs 150 = 15000). Kreol numbers: enn 1, de 2, trwa 3, kat 4, sink 5, sis 6, set 7, wit 8, nef 9, dis 10, douz 12, vinn 20, trant 30, karant 40, sinkant 50, san 100, mil 1000. \"karant mil\" = 40000 rupees. \"40k\" = 40000 rupees. direction: \"income\" for money received (a payslip is always income), otherwise \"expense\". category: one of groceries, dining, transport, fuel, utilities, rent, telecom, health, education, clothing, household, entertainment, subscriptions, gifts, festival, salary, other (a payslip is salary). summary: one or two plain English sentences saying what you understood. If the amount or the type is unclear, set confidenceScore below 0.5. Output a confidenceScore (0.0-1.0). Do no other arithmetic."
-            },
-            {
-              "type": "HumanMessagePromptTemplate",
-              "message": "={{ $json.text }}"
             }
           ]
         }
       },
       "id": "c30ec06e-c71b-471b-ade6-f9908d045bc1",
-      "name": "Claude Voice Parse",
+      "name": "Gemini Voice Parse",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.4,
       "position": [
         752,
         576
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -189,7 +191,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "# --- Transaction Prep (Python Code node) ---\n# Input comes from the \"Get Routine History\" aggregate: one item holding the\n# approved receipt (request) and the months each category was seen before.\n# Mode: Run Once for All Items. No imports needed.\n \n# --- Input ---\naggregate_item = _items[0][\"json\"]\napproved = aggregate_item.get(\"request\") or {}\nuser_id = aggregate_item[\"userId\"]  # injected from the verified token\n \nmonths_by_category = {}\nfor group in aggregate_item.get(\"routineMonths\") or []:\n    category = group.get(\"_id\") or \"uncategorized\"\n    months_by_category[category] = {month for month in group.get(\"months\") or []\n                                    if month}\n \n \n# --- Routine rule (unchanged): same category seen in 2+ distinct past months ---\ndef is_routine(category):\n    return len(months_by_category.get(category, set())) >= 2\n \n \n# --- Build one transaction document per line item ---\ntransaction_docs = []\nfor line in approved.get(\"lineItems\") or []:\n    category = line.get(\"category\", \"uncategorized\")\n    transaction_docs.append({\n        \"userId\": user_id,\n        \"amount\": int(round(line.get(\"price\", 0) * line.get(\"qty\", 1))),\n        \"direction\": line.get(\"direction\", \"expense\"),\n        \"category\": category,\n        \"isRoutine\": is_routine(category),\n        \"txnDate\": approved.get(\"txnDate\"),\n        \"source\": approved.get(\"source\", \"document\"),\n        \"status\": \"VERIFIED\",\n    })\n \n# --- Output: original format plus totals for the acknowledgement ---\nreturn [{\"json\": {\n    \"transactions\": transaction_docs,\n    \"totalCents\": sum(doc[\"amount\"] for doc in transaction_docs),\n    \"vendor\": approved.get(\"vendor\"),\n    \"count\": len(transaction_docs),\n}}]\n"
+        "pythonCode": "# --- Transaction Prep (Python Code node) ---\n# Input comes from the \"Get Routine History\" aggregate: one item holding the\n# approved receipt (request) and the months each category was seen before.\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n\nMAURITIUS_TZ = timezone(timedelta(hours=4))\n \n# --- Input ---\naggregate_item = _items[0][\"json\"]\napproved = aggregate_item.get(\"request\") or {}\nuser_id = aggregate_item[\"userId\"]  # injected from the verified token\n \nmonths_by_category = {}\nfor group in aggregate_item.get(\"routineMonths\") or []:\n    category = group.get(\"_id\") or \"uncategorized\"\n    months_by_category[category] = {month for month in group.get(\"months\") or []\n                                    if month}\n \n \n# --- Routine rule (unchanged): same category seen in 2+ distinct past months ---\ndef is_routine(category):\n    return len(months_by_category.get(category, set())) >= 2\n \n \n# --- Build one transaction document per line item ---\ncreated_at = datetime.now(MAURITIUS_TZ).isoformat(timespec=\"seconds\")\ntransaction_docs = []\nfor line in approved.get(\"lineItems\") or []:\n    category = line.get(\"category\", \"uncategorized\")\n    transaction_docs.append({\n        \"userId\": user_id,\n        \"amount\": int(round(line.get(\"price\", 0) * line.get(\"qty\", 1))),\n        \"direction\": line.get(\"direction\", \"expense\"),\n        \"category\": category,\n        \"isRoutine\": is_routine(category),\n        \"txnDate\": approved.get(\"txnDate\"),\n        \"source\": approved.get(\"source\", \"document\"),\n        \"status\": \"VERIFIED\",\n        \"name\": line.get(\"name\") or \"item\",\n        \"vendor\": approved.get(\"vendor\"),\n        \"docType\": approved.get(\"docType\") or None,\n        \"createdAt\": created_at,\n    })\n \n# --- Output: original format plus totals for the acknowledgement ---\nreturn [{\"json\": {\n    \"transactions\": transaction_docs,\n    \"totalCents\": sum(doc[\"amount\"] for doc in transaction_docs),\n    \"vendor\": approved.get(\"vendor\"),\n    \"count\": len(transaction_docs),\n}}]\n"
       },
       "id": "d3643628-9623-434b-8837-a5f1ee9429b5",
       "name": "Transaction Prep",
@@ -232,7 +234,7 @@
       "parameters": {
         "operation": "aggregate",
         "collection": "transactions",
-        "query": "==[\n  { \"$match\": { \"userId\": \"{{ $json.userId }}\", \"direction\": \"expense\" } },\n  { \"$facet\": {\n      \"thisPeriod\": [\n        { \"$match\": { \"txnDate\": {\n            \"$gte\": \"{{ $now.minus({ days: 30 }).toFormat('yyyy-MM-dd') }}\" } } },\n        { \"$group\": { \"_id\": \"$category\", \"totalCents\": { \"$sum\": \"$amount\" } } }\n      ],\n      \"lastPeriod\": [\n        { \"$match\": { \"txnDate\": {\n            \"$gte\": \"{{ $now.minus({ days: 60 }).toFormat('yyyy-MM-dd') }}\",\n            \"$lt\": \"{{ $now.minus({ days: 30 }).toFormat('yyyy-MM-dd') }}\" } } },\n        { \"$group\": { \"_id\": \"$category\", \"totalCents\": { \"$sum\": \"$amount\" } } }\n      ]\n  } },\n  { \"$project\": {\n      \"userId\": { \"$literal\": \"{{ $json.userId }}\" },\n      \"thisPeriod\": { \"$arrayToObject\": { \"$map\": {\n          \"input\": \"$thisPeriod\", \"as\": \"row\",\n          \"in\": { \"k\": { \"$ifNull\": [ \"$$row._id\", \"uncategorized\" ] },\n                  \"v\": \"$$row.totalCents\" } } } },\n      \"lastPeriod\": { \"$arrayToObject\": { \"$map\": {\n          \"input\": \"$lastPeriod\", \"as\": \"row\",\n          \"in\": { \"k\": { \"$ifNull\": [ \"$$row._id\", \"uncategorized\" ] },\n                  \"v\": \"$$row.totalCents\" } } } }\n  } }\n]\n"
+        "query": "=[\n  { \"$match\": { \"userId\": \"{{ $json.userId }}\", \"direction\": \"expense\" } },\n  { \"$facet\": {\n      \"thisPeriod\": [\n        { \"$match\": { \"txnDate\": {\n            \"$gte\": \"{{ $now.minus({ days: 30 }).toFormat('yyyy-MM-dd') }}\" } } },\n        { \"$group\": { \"_id\": \"$category\", \"totalCents\": { \"$sum\": \"$amount\" } } }\n      ],\n      \"lastPeriod\": [\n        { \"$match\": { \"txnDate\": {\n            \"$gte\": \"{{ $now.minus({ days: 60 }).toFormat('yyyy-MM-dd') }}\",\n            \"$lt\": \"{{ $now.minus({ days: 30 }).toFormat('yyyy-MM-dd') }}\" } } },\n        { \"$group\": { \"_id\": \"$category\", \"totalCents\": { \"$sum\": \"$amount\" } } }\n      ]\n  } },\n  { \"$project\": {\n      \"userId\": { \"$literal\": \"{{ $json.userId }}\" },\n      \"thisPeriod\": { \"$arrayToObject\": { \"$map\": {\n          \"input\": \"$thisPeriod\", \"as\": \"row\",\n          \"in\": { \"k\": { \"$ifNull\": [ \"$$row._id\", \"uncategorized\" ] },\n                  \"v\": \"$$row.totalCents\" } } } },\n      \"lastPeriod\": { \"$arrayToObject\": { \"$map\": {\n          \"input\": \"$lastPeriod\", \"as\": \"row\",\n          \"in\": { \"k\": { \"$ifNull\": [ \"$$row._id\", \"uncategorized\" ] },\n                  \"v\": \"$$row.totalCents\" } } } }\n  } }\n]\n"
       },
       "id": "b8bb7949-a3df-4d3b-9db0-b27c6445282a",
       "name": "Mongo Aggregate Periods",
@@ -267,7 +269,7 @@
       "parameters": {
         "operation": "insert",
         "collection": "transactions",
-        "fields": "userId,amount,direction,category,isRoutine,txnDate,source,status",
+        "fields": "userId,amount,direction,category,isRoutine,txnDate,source,status,name,vendor,docType,createdAt",
         "options": {}
       },
       "id": "82c9d6bc-0ed1-465b-9438-dc872df9905d",
@@ -300,7 +302,7 @@
         576
       ],
       "id": "bce14098-8fdb-4853-b5d0-fc935e1d2dde",
-      "name": "Convert to File"
+      "name": "Audio To File"
     },
     {
       "parameters": {
@@ -571,7 +573,7 @@
         }
       },
       "id": "1c1b263a-7986-449d-8743-e997cb0c2d18",
-      "name": "Switch on body.inputType1",
+      "name": "Switch on inputType",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
@@ -582,7 +584,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "# --- Profile Prep (Python Code node, new \"profile\" route) ---\n# Called once right after Firebase signup, and whenever the user edits\n# salary or balance. Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n \nMAURITIUS_TZ = timezone(timedelta(hours=4))\n \n \ndef non_negative_cents(value, field_name):\n    cents = int(round(float(value)))\n    if cents < 0:\n        raise Exception(\"INVALID_PROFILE: \" + field_name + \" cannot be negative\")\n    return cents\n \n \n# --- Input: Auth Bouncer output ---\nrequest = _items[0][\"json\"]\nnow_mu = datetime.now(MAURITIUS_TZ)\n \nbuffer_weeks = int(request.get(\"bufferWeeks\") or 4)\nbuffer_weeks = min(max(buffer_weeks, 1), 12)\n \n# --- Output: users collection document (keyed by the Firebase UID) ---\nreturn [{\"json\": {\n    \"userId\": request[\"userId\"],\n    \"email\": request.get(\"email\"),\n    \"salary\": non_negative_cents(request.get(\"salaryCents\", 0), \"salary\"),\n    \"manualBalance\": non_negative_cents(request.get(\"manualBalanceCents\", 0),\n                                        \"balance\"),\n    \"manualBalanceDate\": now_mu.strftime(\"%Y-%m-%d\"),\n    \"bufferWeeks\": buffer_weeks,\n    \"updatedAt\": now_mu.isoformat(timespec=\"seconds\"),\n}}]\n"
+        "pythonCode": "# --- Profile Prep (Python Code node, new \"profile\" route) ---\n# Called once right after Firebase signup, and whenever the user edits\n# salary or balance. Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n \nMAURITIUS_TZ = timezone(timedelta(hours=4))\n \n \ndef non_negative_cents(value, field_name):\n    \"\"\"None when the field was not sent, so the app asks for it later.\"\"\"\n    if value is None or value == \"\":\n        return None\n    cents = int(round(float(value)))\n    if cents < 0:\n        raise Exception(\"INVALID_PROFILE: \" + field_name + \" cannot be negative\")\n    return cents\n \n \n# --- Input: Auth Bouncer output ---\nrequest = _items[0][\"json\"]\nnow_mu = datetime.now(MAURITIUS_TZ)\n \nbuffer_weeks = int(request.get(\"bufferWeeks\") or 4)\nbuffer_weeks = min(max(buffer_weeks, 1), 12)\n \nsalary = non_negative_cents(request.get(\"salaryCents\"), \"salary\")\nmanual_balance = non_negative_cents(request.get(\"manualBalanceCents\"), \"balance\")\n\n# --- Output: users collection document (keyed by the Firebase UID) ---\nreturn [{\"json\": {\n    \"userId\": request[\"userId\"],\n    \"email\": request.get(\"email\"),\n    \"salary\": salary,\n    \"manualBalance\": manual_balance,\n    # Without a manual balance, the balance is worked out from all transactions.\n    \"manualBalanceDate\": now_mu.strftime(\"%Y-%m-%d\") if manual_balance is not None else None,\n    \"bufferWeeks\": buffer_weeks,\n    \"updatedAt\": now_mu.isoformat(timespec=\"seconds\"),\n}}]\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -591,7 +593,8 @@
         16
       ],
       "id": "b9044f9e-a8de-49f7-8cb5-f03853d16638",
-      "name": "Profile Prep"
+      "name": "Profile Prep",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -629,7 +632,8 @@
         160
       ],
       "id": "e8556947-8177-49c0-b478-55196c4c97d4",
-      "name": "Confirm Check"
+      "name": "Confirm Check",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -643,7 +647,7 @@
         160
       ],
       "id": "ef88f76d-1dcd-4448-9eba-4f2d0d2a38e4",
-      "name": "Code in Python",
+      "name": "Auth Bouncer",
       "onError": "continueErrorOutput"
     },
     {
@@ -661,7 +665,7 @@
         336
       ],
       "id": "6cde4184-171b-4aab-9d6f-32c4a096c353",
-      "name": "Respond to Webhook"
+      "name": "Respond 401"
     },
     {
       "parameters": {
@@ -678,7 +682,7 @@
         -992
       ],
       "id": "62417926-f3a7-4b0e-86e5-a5e2a2662fd9",
-      "name": "Convert to File1"
+      "name": "Image To File"
     },
     {
       "parameters": {
@@ -740,7 +744,7 @@
         -160
       ],
       "id": "89146df7-0e5d-455d-95cf-58704f374a37",
-      "name": "Google Gemini Chat Model1",
+      "name": "Document Model",
       "credentials": {
         "googlePalmApi": {
           "id": "iv1A4z5pHK5ZZsWj",
@@ -768,7 +772,8 @@
       "position": [
         896,
         -384
-      ]
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -943,7 +948,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "# --- Build Acknowledgement (Python Code node, right before Final Respond) ---\n# Every branch ends here. Detects what arrived and returns a short receipt.\n# Mode: Run Once for All Items. No imports needed.\n \nincoming = [entry[\"json\"] for entry in _items]\nfirst = incoming[0] if incoming else {}\n \n \ndef ack(record, saved, message_key, **extra):\n    return [{\"json\": {\"success\": True, \"saved\": saved, \"record\": record,\n                      \"messageKey\": message_key, **extra}}]\n \n \n# --- Transactions inserted (one item per saved transaction) ---\nif \"amount\" in first and \"direction\" in first:\n    return ack(\"transaction\", True, \"TRANSACTION_SAVED\",\n               count=len(incoming),\n               totalCents=sum(int(doc.get(\"amount\", 0)) for doc in incoming),\n               ids=[doc.get(\"id\") or doc.get(\"_id\") for doc in incoming])\n \n# --- Goal upserted ---\nif \"goalKey\" in first:\n    return ack(\"goal\", True, \"GOAL_SAVED\",\n               goalKey=first.get(\"goalKey\"),\n               savedAmountCents=first.get(\"savedAmount\"),\n               verdict=first.get(\"verdict\"),\n               itemName=first.get(\"itemName\"),\n               timelineMonths=first.get(\"timelineMonths\"),\n               status=first.get(\"status\"))\n \n# --- Profile upserted (Firebase onboarding) ---\nif \"salary\" in first and \"bufferWeeks\" in first:\n    return ack(\"profile\", True, \"PROFILE_SAVED\")\n \n# --- Afford question: nothing saved, return the verdict ---\nif \"verdict\" in first:\n    return ack(\"afford\", False, \"AFFORD_\" + str(first[\"verdict\"]),\n               verdict=first[\"verdict\"],\n               monthsNeeded=first.get(\"monthsNeeded\"),\n               safeToSpendCents=first.get(\"safeToSpend\"),\n               reachable=first.get(\"reachable\", True))\n \n# --- Spending summary: nothing saved ---\nif \"topMovers\" in first or \"summaryData\" in first:\n    return ack(\"summary\", False, \"SUMMARY_READY\",\n               summary=first.get(\"topMovers\"))\n \nreturn ack(\"unknown\", False, \"NOTHING_TO_SAVE\")\n"
+        "pythonCode": "# --- Build Acknowledgement (Python Code node, right before Final Respond) ---\n# Every branch ends here. Detects what arrived and returns a short receipt.\n# Mode: Run Once for All Items. No imports needed.\n \nincoming = [entry[\"json\"] for entry in _items]\nfirst = incoming[0] if incoming else {}\n \n \ndef ack(record, saved, message_key, **extra):\n    return [{\"json\": {\"success\": True, \"saved\": saved, \"record\": record,\n                      \"messageKey\": message_key, **extra}}]\n \n \n# --- Transactions inserted (one item per saved transaction) ---\nif \"amount\" in first and \"direction\" in first:\n    return ack(\"transaction\", True, \"TRANSACTION_SAVED\",\n               count=len(incoming),\n               totalCents=sum(int(doc.get(\"amount\", 0)) for doc in incoming),\n               ids=[doc.get(\"id\") or doc.get(\"_id\") for doc in incoming])\n \n# --- Goal upserted (a goal document has targetAmount; the afford result does not) ---\nif \"goalKey\" in first and \"targetAmount\" in first:\n    return ack(\"goal\", True, \"GOAL_SAVED\",\n               goalKey=first.get(\"goalKey\"),\n               savedAmountCents=first.get(\"savedAmount\"),\n               verdict=first.get(\"verdict\"),\n               itemName=first.get(\"itemName\"),\n               timelineMonths=first.get(\"timelineMonths\"),\n               status=first.get(\"status\"))\n \n# --- Profile upserted (Firebase onboarding) ---\nif \"salary\" in first and \"bufferWeeks\" in first:\n    return ack(\"profile\", True, \"PROFILE_SAVED\")\n \n# --- Afford question: nothing saved, return the verdict ---\nif \"verdict\" in first:\n    return ack(\"afford\", False, \"AFFORD_\" + str(first[\"verdict\"]),\n               verdict=first[\"verdict\"],\n               monthsNeeded=first.get(\"monthsNeeded\"),\n               safeToSpendCents=first.get(\"safeToSpend\"),\n               reachable=first.get(\"reachable\", True))\n \n# --- Spending summary: nothing saved ---\nif \"topMovers\" in first or \"summaryData\" in first:\n    return ack(\"summary\", False, \"SUMMARY_READY\",\n               summary=first.get(\"topMovers\"))\n \nreturn ack(\"unknown\", False, \"NOTHING_TO_SAVE\")\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -965,12 +970,14 @@
         96
       ],
       "id": "856ecfc8-1820-4d0d-911f-10c6e1330175",
-      "name": "Final Respond to Webhook1"
+      "name": "Respond Result"
     },
     {
       "parameters": {
         "modelName": "models/gemini-2.5-flash",
-        "options": {}
+        "options": {
+          "temperature": 0
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
@@ -979,7 +986,7 @@
         752
       ],
       "id": "0f3e27f5-efe3-4de6-9786-e62240cc3be3",
-      "name": "Google Gemini Chat Model2",
+      "name": "Voice Model",
       "credentials": {
         "googlePalmApi": {
           "id": "iv1A4z5pHK5ZZsWj",
@@ -1079,7 +1086,8 @@
         368
       ],
       "id": "fe7de410-f326-490a-ad37-2844b4f8dd84",
-      "name": "Goal Update Prep"
+      "name": "Goal Update Prep",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1097,6 +1105,23 @@
         320,
         800
       ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"error\": \"INVALID_REQUEST\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "7d9159e3-6078-48e4-9ba6-7d1bbc2575e6",
+      "name": "Respond Invalid Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2368,
+        800
+      ]
     }
   ],
   "pinData": {},
@@ -1105,7 +1130,7 @@
       "main": [
         [
           {
-            "node": "Code in Python",
+            "node": "Auth Bouncer",
             "type": "main",
             "index": 0
           }
@@ -1132,33 +1157,20 @@
             "index": 0
           }
         ]
-      ],
-      "main": [
-        [
-          {
-            "node": "Respond Extraction Failed",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Gemini Receipt Extract",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
       ]
     },
     "myt_asr": {
       "main": [
         [
           {
-            "node": "Claude Voice Parse",
+            "node": "Gemini Voice Parse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Extraction Failed",
             "type": "main",
             "index": 0
           }
@@ -1169,7 +1181,7 @@
       "ai_outputParser": [
         [
           {
-            "node": "Claude Voice Parse",
+            "node": "Gemini Voice Parse",
             "type": "ai_outputParser",
             "index": 0
           }
@@ -1181,17 +1193,6 @@
         [
           {
             "node": "Respond Preview",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Claude Voice Parse": {
-      "main": [
-        [
-          {
-            "node": "Attach Identity(Voice)",
             "type": "main",
             "index": 0
           }
@@ -1282,17 +1283,6 @@
         ]
       ]
     },
-    "Convert to File": {
-      "main": [
-        [
-          {
-            "node": "myt_asr",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Attach Identity(Voice)": {
       "main": [
         [
@@ -1315,100 +1305,18 @@
         ]
       ]
     },
-    "Switch on body.inputType1": {
-      "main": [
-        [
-          {
-            "node": "Convert to File1",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Attach Identity Receipt",
-            "type": "main",
-            "index": 1
-          }
-        ],
-        [
-          {
-            "node": "Document To File",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Attach Identity(Document)",
-            "type": "main",
-            "index": 1
-          }
-        ],
-        [
-          {
-            "node": "Convert to File",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Attach Identity(Voice)",
-            "type": "main",
-            "index": 1
-          }
-        ],
-        [
-          {
-            "node": "Get User & Txns",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get User & Txns",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Mongo Aggregate Periods",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Profile Prep",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Confirm Check",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Goal Update Prep",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond Unknown Input",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Profile Prep": {
       "main": [
         [
           {
             "node": "Upsert Profile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Request",
             "type": "main",
             "index": 0
           }
@@ -1423,32 +1331,10 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "Code in Python": {
-      "main": [
-        [
-          {
-            "node": "Switch on body.inputType1",
-            "type": "main",
-            "index": 0
-          }
         ],
         [
           {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File1": {
-      "main": [
-        [
-          {
-            "node": "Gemini Receipt Extract",
+            "node": "Respond Invalid Request",
             "type": "main",
             "index": 0
           }
@@ -1488,22 +1374,18 @@
         ]
       ]
     },
-    "Google Gemini Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Document Extract",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Document Extract": {
       "main": [
         [
           {
             "node": "Attach Identity(Document)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Extraction Failed",
             "type": "main",
             "index": 0
           }
@@ -1609,19 +1491,8 @@
       "main": [
         [
           {
-            "node": "Final Respond to Webhook1",
+            "node": "Respond Result",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model2": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Claude Voice Parse",
-            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -1675,14 +1546,202 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Respond Invalid Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth Bouncer": {
+      "main": [
+        [
+          {
+            "node": "Switch on inputType",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch on inputType": {
+      "main": [
+        [
+          {
+            "node": "Image To File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach Identity Receipt",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Document To File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach Identity(Document)",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Audio To File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Attach Identity(Voice)",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Get User & Txns",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User & Txns",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mongo Aggregate Periods",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Profile Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Confirm Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Goal Update Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Unknown Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Voice Parse": {
+      "main": [
+        [
+          {
+            "node": "Attach Identity(Voice)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Extraction Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gemini Receipt Extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Document Extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gemini Voice Parse",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image To File": {
+      "main": [
+        [
+          {
+            "node": "Gemini Receipt Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio To File": {
+      "main": [
+        [
+          {
+            "node": "myt_asr",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timezone": "Indian/Mauritius"
   },
   "versionId": "6bf53e6d-b753-4c62-9cff-02f73237492d",
   "meta": {
