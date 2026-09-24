@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  Camera,
   FileText,
   Keyboard,
   LoaderCircle,
@@ -15,6 +16,7 @@ import {
 
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import CameraCapture from '../components/input/CameraCapture.jsx'
 import { callN8n } from '../firebase/apiClient.js'
 import { centsToRupees, money, rupeesToCents } from '../utils/money.js'
 
@@ -25,6 +27,7 @@ const MAX_RECORDING_SECONDS = 120
 
 const methods = [
   { id: 'upload', label: 'Upload document', description: 'Payslip, receipt or purchase', Icon: Upload },
+  { id: 'camera', label: 'Scan with camera', description: 'Use your phone camera', Icon: Camera },
   { id: 'voice', label: 'Voice input', description: 'Describe it out loud', Icon: Mic },
   { id: 'manual', label: 'Manual entry', description: 'Type the details', Icon: Keyboard },
 ]
@@ -188,6 +191,16 @@ export default function InputDataPage() {
     })
   }
 
+  // Camera photos are already shrunk to a JPEG; they go through the image (receipt) route.
+  async function onCameraPhoto(photo) {
+    await requestPreview({
+      inputType: 'receipt',
+      fileData: await readAsBase64(photo),
+      mimeType: photo.type || 'image/jpeg',
+      fileName: 'camera-scan.jpg',
+    })
+  }
+
   // --- Voice recording ---
   async function startRecording() {
     setError('')
@@ -336,6 +349,10 @@ export default function InputDataPage() {
               <input type="file" accept="image/*,application/pdf" onChange={onFileChosen} disabled={locked} />
             </label>
           </section>
+        )}
+
+        {method === 'camera' && (
+          <CameraCapture busy={busy !== ''} onPhoto={onCameraPhoto} onError={setError} />
         )}
 
         {method === 'voice' && (

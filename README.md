@@ -48,10 +48,14 @@ Unknown URLs show a Page Not Found screen. Protected routes redirect signed-out 
 These screens read and write through n8n (MongoDB behind it), per signed-in user:
 
 - **Dashboard** cards: `getDashboard` on the Read API (salary, usual monthly spending, active goals).
-- **Financial Input**: uploads (images or PDF) and voice notes go to Main for an AI preview (document type, summary, confidence score). Nothing is saved until **Analyse my finances**, which sends `confirmTransaction`. A confirmed payslip also updates the profile salary.
+- **Financial Input**: uploads (images or PDF), camera scans and voice notes go to Main for an AI preview (document type, summary, confidence score). Nothing is saved until **Analyse my finances**, which sends `confirmTransaction`. A confirmed payslip also updates the profile salary.
 - **My Goals**: `listGoals` on the Read API; new goals are checked with `afford` and saved with `goal`; edits use `updateGoal`.
 
 Financial Overview and AI Coach still use demo data from browser `localStorage`.
+
+### Camera scanning
+
+**Scan with camera** shows a live view from the back camera. The photo is shrunk to at most 1600 px (JPEG) and sent through the same image route as an upload. Browsers only allow the live view on `https` pages or `localhost`. On a plain `http` address, such as testing from your phone at `http://<laptop-ip>:5173`, the page offers your phone's camera app instead, which works anywhere.
 
 ## Quality checks
 

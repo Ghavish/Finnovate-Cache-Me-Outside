@@ -17,7 +17,7 @@
 @media(max-width:760px){.sidebar{display:none}.page-column{margin-left:0}.topbar{justify-content:space-between;padding:0 15px}.mobile-brand{display:flex;align-items:center;gap:9px}.topbar-actions button span{display:none}.main-content{width:calc(100% - 32px);padding:32px 0 100px}.page-title-row{align-items:flex-start}.new-goal-button{white-space:nowrap}.field-grid{grid-template-columns:1fr}.field-grid .full-width{grid-column:auto}.metric-grid{grid-template-columns:1fr}.quick-grid{grid-template-columns:1fr}.dashboard-hero{padding:28px}.dashboard-hero h2{font-size:30px}.mobile-nav{position:fixed;inset:auto 0 0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);min-height:72px;border-top:1px solid var(--border);background:#fff}.mobile-nav a{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#858ca3;font-size:10px;text-decoration:none}.mobile-nav a.selected{color:#6d28d9}.login-page{display:block;padding:0}.login-brand-panel{display:none}.login-form-panel{min-height:100vh;border-radius:0;padding:28px}.transaction-list li{grid-template-columns:55px 1fr auto;font-size:13px}}
 
 /* Dashboard → Input Data → Analysis Result flow */
-.method-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}.method-grid button{display:grid;min-height:145px;place-items:center;align-content:center;gap:7px;border:1px solid var(--border);border-radius:17px;color:var(--navy);background:#fff}.method-grid button svg{color:var(--purple)}.method-grid button small{color:var(--muted)}.method-grid button.selected{border:2px solid #7c3aed;background:#f8f5ff;box-shadow:0 12px 30px rgba(83,32,169,.1)}
+.method-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}.method-grid button{display:grid;min-height:145px;place-items:center;align-content:center;gap:7px;border:1px solid var(--border);border-radius:17px;color:var(--navy);background:#fff}.method-grid button svg{color:var(--purple)}.method-grid button small{color:var(--muted)}.method-grid button.selected{border:2px solid #7c3aed;background:#f8f5ff;box-shadow:0 12px 30px rgba(83,32,169,.1)}
 .input-workspace{display:grid;grid-template-columns:1fr 1fr;gap:20px}.input-method-panel,.review-values{border:1px solid var(--border);border-radius:18px;padding:28px;background:#fff;box-shadow:0 14px 40px rgba(24,24,61,.055)}.input-method-panel>svg{color:var(--purple)}.input-method-panel h2,.review-values h2{margin:12px 0 8px;color:var(--navy)}.input-method-panel>p{color:var(--muted);line-height:1.6}.upload-zone{position:relative;display:grid;min-height:190px;place-items:center;align-content:center;gap:8px;margin-top:22px;border:2px dashed #bdb4dc;border-radius:15px;color:var(--purple);background:#faf8ff;cursor:pointer}.upload-zone small{color:var(--muted)}.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}.record-button{display:flex;align-items:center;gap:9px;margin-top:24px;border:0;border-radius:12px;padding:13px 18px;color:#fff;background:var(--purple-dark);font-weight:800}.record-button.recording{background:#c43232}.transcript{margin-top:20px;border-radius:12px;padding:16px;background:var(--purple-light)}.transcript p{margin:6px 0 0;color:var(--muted)}
 .review-values>div{display:grid;gap:18px}.review-values label{display:grid;gap:8px;color:#5d6378;font-size:12px;font-weight:800;text-transform:uppercase}.review-values .money-input input{min-height:52px}.review-values .primary-button{width:100%;margin-top:22px}
 .result-banner{display:flex;align-items:center;gap:14px;margin-bottom:22px;border:1px solid #b9e9d6;border-radius:16px;padding:20px;color:#087343;background:#ecfdf3}.result-banner strong{font-size:18px}.result-banner p{margin:4px 0 0;color:#4c7767}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.result-grid article{display:grid;gap:10px;border:1px solid var(--border);border-radius:18px;padding:25px;background:#fff;box-shadow:0 14px 40px rgba(24,24,61,.055)}.result-grid article svg{color:var(--purple)}.result-grid small{color:var(--muted);text-transform:uppercase;font-weight:800}.result-grid strong{color:var(--navy);font-size:27px}.result-grid article.highlight{border-color:#b9e9d6;background:#f5fffb}.result-grid article.highlight strong,.result-grid article.highlight svg{color:#118260}.result-explanation{margin-top:22px;border-radius:18px;padding:26px;background:#f2edff}.result-explanation h2{margin:0 0 8px}.result-explanation p{margin:0;color:var(--muted);line-height:1.7}.result-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:22px}.result-actions a{display:flex;min-height:47px;align-items:center;gap:8px;border-radius:11px;padding:0 18px;font-weight:800;text-decoration:none}.secondary-link{border:1px solid var(--border);background:#fff}.primary-link{color:#fff;background:var(--purple-dark)}
@@ -251,4 +251,24 @@
   .draft-view dl { grid-template-columns:1fr 1fr }
   .modal-actions { flex-wrap:wrap }
   .modal-actions > * { flex:1 1 140px }
+}
+
+/* Financial Input: camera scan */
+.camera-frame { position:relative; display:grid; place-items:center; width:100%; aspect-ratio:3/4; max-height:60vh; margin-top:20px; overflow:hidden; border-radius:15px; background:#101936 }
+.camera-frame video, .camera-frame img { width:100%; height:100%; object-fit:cover }
+.camera-frame img { object-fit:contain; background:#101936 }
+.camera-frame video.hidden { display:none }
+.camera-guide { position:absolute; inset:7%; border:2px dashed rgba(255,255,255,.8); border-radius:12px; pointer-events:none }
+.camera-placeholder { display:grid; justify-items:center; gap:10px; max-width:260px; padding:20px; color:#c0c6dd; text-align:center; line-height:1.5 }
+.camera-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px }
+.camera-actions > button { display:flex; flex:1 1 120px; align-items:center; justify-content:center; gap:7px; padding:0 12px; white-space:nowrap }
+.camera-app-link { display:inline-flex; align-items:center; gap:7px; margin-top:14px; color:var(--purple-dark); font-weight:800; cursor:pointer }
+.camera-app-link.disabled { opacity:.5; cursor:not-allowed }
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
+
+@media(max-width:1000px){ .method-grid { grid-template-columns:repeat(2,1fr) } }
+@media(max-width:760px){
+  .method-grid { grid-template-columns:repeat(2,1fr); gap:12px }
+  .method-grid button { min-height:112px; padding:10px; text-align:center }
+  .camera-frame { max-height:65vh }
 }
