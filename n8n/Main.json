@@ -1,5 +1,5 @@
 {
-  "name": "Main",
+  "name": "MoBudget Main",
   "nodes": [
     {
       "parameters": {
@@ -219,7 +219,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "# --- Affordability Algorithm (Python Code node) ---\n# Mode: Run Once for All Items.\n# Needs stdlib allow: datetime. External allow: holidays, dateutil\nfrom datetime import date\n \nimport holidays\nfrom dateutil.relativedelta import relativedelta\n \n# --- Config (team-tuned spike weights, integer cents) ---\nMAX_MONTHS = 120\n# Keys are the exact holiday names from holidays.Mauritius; matched with startswith.\nFESTIVAL_SPIKE_CENTS = {\n    \"New Year's Day\": 400000,\n    \"Thaipoosam Cavadee\": 400000,\n    \"Maha Shivaratree\": 350000,\n    \"Chinese Spring Festival\": 350000,\n    \"Eid-ul-Fitr\": 300000,          # library adds \" (estimated)\"\n    \"Ougadi\": 300000,\n    \"Ganesh Chaturthi\": 250000,\n    \"Divali\": 600000,\n    \"Christmas Day\": 900000,\n}\n# Events the library does not list, as (month, name, cents). Add as the team decides.\nMANUAL_EVENTS = []                  # e.g. [(9, \"Pere Laval pilgrimage\", 250000)]\nRESERVE_UPCOMING_FESTIVALS = True  # hold back festivals due soon\nRESERVE_WINDOW_DAYS = 60\n \n# --- Input (built by Merge User & Txns) ---\nitem = _items[0][\"json\"]\nuser = item.get(\"user\") or {}\ntxns = item.get(\"transactions\") or []\ntarget = int(item.get(\"targetAmountCents\") or 0)\ntoday = date.fromisoformat(item[\"today\"])  # Mauritius date, not the server clock\n \npassthrough = {\n    \"userId\": item[\"userId\"],\n    \"intent\": item.get(\"intent\"),\n    \"itemName\": item.get(\"itemName\"),\n    \"link\": item.get(\"link\"),\n    \"goalType\": item.get(\"goalType\"),\n    \"targetAmountCents\": target,\n    \"goalKey\": item.get(\"goalKey\"),\n    \"savedAmountCents\": int(item.get(\"savedAmountCents\") or 0),\n}\n \n# --- Guard: Firebase account exists but no financial profile yet ---\nif not item.get(\"profileComplete\"):\n    return [{\"json\": {**passthrough, \"verdict\": \"NEEDS_PROFILE\", \"monthsNeeded\": 0,\n                      \"inferredBalance\": 0, \"safeToSpend\": 0, \"reachable\": False}}]\n \n# --- Step 1: inferred balance ---\nif user.get(\"manualBalance\") is not None:\n    balance = int(user[\"manualBalance\"])\n    cutoff = str(user.get(\"manualBalanceDate\") or \"\")\n    recent = [t for t in txns if str(t.get(\"txnDate\")) > cutoff]\nelse:\n    balance, recent = 0, txns\nfor t in recent:\n    amount = int(t.get(\"amount\", 0))\n    balance += amount if t.get(\"direction\") == \"income\" else -amount\n \n# --- Step 2: routine monthly baseline (integer cents) ---\nroutine = [t for t in txns if t.get(\"isRoutine\") and t.get(\"direction\") == \"expense\"]\nmonths_seen = len({str(t.get(\"txnDate\"))[:7] for t in routine}) or 1\nmonthly_routine = sum(int(t.get(\"amount\", 0)) for t in routine) // months_seen\n \n# --- Step 3: monthly income ---\nmonthly_income = int(user.get(\"salary\") or 0)\n \n# --- Step 4: festival spikes as dated events, summed per (year, month) ---\nyears_needed = range(today.year, today.year + MAX_MONTHS // 12 + 2)\nfestival_events = []  # (date, cents)\nfor holiday_date, holiday_name in holidays.Mauritius(years=years_needed).items():\n    for festival_name, spike_cents in FESTIVAL_SPIKE_CENTS.items():\n        if holiday_name.startswith(festival_name):\n            festival_events.append((holiday_date, spike_cents))\nfor year in years_needed:\n    for month, _event_name, spike_cents in MANUAL_EVENTS:\n        festival_events.append((date(year, month, 1), spike_cents))\n \nspike_by_month = {}\nfor event_date, spike_cents in festival_events:\n    key = (event_date.year, event_date.month)\n    spike_by_month[key] = spike_by_month.get(key, 0) + spike_cents\n \n \ndef surplus_for(month_date):\n    spike = spike_by_month.get((month_date.year, month_date.month), 0)\n    return (monthly_income - monthly_routine) - spike\n \n \n# --- Step 5: buffer + safe-to-spend now ---\nbuffer = monthly_routine * int(user.get(\"bufferWeeks\") or 4) // 4\nsafe_base = balance - buffer\nreserve_until = today + relativedelta(days=RESERVE_WINDOW_DAYS)\nfestival_reserve = sum(\n    cents for event_date, cents in festival_events\n    if today <= event_date <= reserve_until\n) if RESERVE_UPCOMING_FESTIVALS else 0\nsafe_now = safe_base - festival_reserve\n \n# --- Step 6: verdict / timeline ---\nreachable = True\nif target <= safe_now:\n    verdict, months = \"SAFE\", 0\nelif target <= safe_now + buffer:\n    verdict, months = \"TIGHT\", 0\nelse:\n    # Timeline starts from the base, then subtracts each month's spikes once.\n    still_due_this_month = sum(\n        cents for event_date, cents in festival_events\n        if event_date >= today\n        and (event_date.year, event_date.month) == (today.year, today.month)\n    )\n    verdict, months, cursor = \"NOT_SAFE\", 0, today\n    accumulated = safe_base - still_due_this_month\n    while accumulated < target and months < MAX_MONTHS:\n        cursor += relativedelta(months=1)\n        accumulated += surplus_for(cursor)\n        months += 1\n    reachable = accumulated >= target\n \n# --- Output: original keys plus passthrough for the goal save ---\nreturn [{\"json\": {\n    **passthrough,\n    \"verdict\": verdict,\n    \"monthsNeeded\": months,\n    \"inferredBalance\": balance,\n    \"safeToSpend\": safe_now,\n    \"reachable\": reachable,\n}}]\n"
+        "pythonCode": "# --- Affordability Algorithm (Python Code node) ---\n# Mode: Run Once for All Items.\n# Needs stdlib allow: datetime. External allow: holidays, dateutil\nfrom datetime import date\n \nimport holidays\nfrom dateutil.relativedelta import relativedelta\n \n# --- Config (team-tuned spike weights, integer cents) ---\nMAX_MONTHS = 120\n# Keys are the exact holiday names from holidays.Mauritius; matched with startswith.\nFESTIVAL_SPIKE_CENTS = {\n    \"New Year's Day\": 400000,\n    \"Thaipoosam Cavadee\": 400000,\n    \"Maha Shivaratree\": 350000,\n    \"Chinese Spring Festival\": 350000,\n    \"Eid-ul-Fitr\": 300000,          # library adds \" (estimated)\"\n    \"Ougadi\": 300000,\n    \"Ganesh Chaturthi\": 250000,\n    \"Divali\": 600000,\n    \"Christmas Day\": 900000,\n}\n# Events the library does not list, as (month, name, cents). Add as the team decides.\nMANUAL_EVENTS = []                  # e.g. [(9, \"Pere Laval pilgrimage\", 250000)]\nRESERVE_UPCOMING_FESTIVALS = True  # hold back festivals due soon\nRESERVE_WINDOW_DAYS = 60\n \n# --- Input (built by Merge User & Txns) ---\nitem = _items[0][\"json\"]\nuser = item.get(\"user\") or {}\ntxns = item.get(\"transactions\") or []\ntarget = int(item.get(\"targetAmountCents\") or 0)\ntoday = date.fromisoformat(item[\"today\"])  # Mauritius date, not the server clock\n \npassthrough = {\n    \"userId\": item[\"userId\"],\n    \"intent\": item.get(\"intent\"),\n    \"itemName\": item.get(\"itemName\"),\n    \"link\": item.get(\"link\"),\n    \"goalType\": item.get(\"goalType\"),\n    \"targetAmountCents\": target,\n    \"goalKey\": item.get(\"goalKey\"),\n    \"savedAmountCents\": int(item.get(\"savedAmountCents\") or 0),\n}\n \n# --- Guard: Firebase account exists but no financial profile yet ---\nif not item.get(\"profileComplete\"):\n    return [{\"json\": {**passthrough, \"verdict\": \"NEEDS_PROFILE\", \"monthsNeeded\": 0,\n                      \"inferredBalance\": 0, \"safeToSpend\": 0, \"reachable\": False}}]\n \n# --- Step 1: inferred balance ---\nif user.get(\"manualBalance\") is not None:\n    balance = int(user[\"manualBalance\"])\n    cutoff = str(user.get(\"manualBalanceDate\") or \"\")\n    recent = [t for t in txns if str(t.get(\"txnDate\")) > cutoff]\nelse:\n    balance, recent = 0, txns\nfor t in recent:\n    amount = int(t.get(\"amount\", 0))\n    balance += amount if t.get(\"direction\") == \"income\" else -amount\n \n# --- Step 2: routine monthly baseline (integer cents) ---\n# The user's own monthly expense list wins; otherwise estimate from repeat expenses.\ndeclared_expenses = [e for e in (user.get(\"monthlyExpenses\") or []) if isinstance(e, dict)]\nif declared_expenses:\n    monthly_routine = sum(int(e.get(\"amountCents\") or 0) for e in declared_expenses)\nelse:\n    routine = [t for t in txns if t.get(\"isRoutine\") and t.get(\"direction\") == \"expense\"]\n    months_seen = len({str(t.get(\"txnDate\"))[:7] for t in routine}) or 1\n    monthly_routine = sum(int(t.get(\"amount\", 0)) for t in routine) // months_seen\n \n# --- Step 3: monthly income ---\nmonthly_income = int(user.get(\"salary\") or 0)\n \n# --- Step 4: festival spikes as dated events, summed per (year, month) ---\nyears_needed = range(today.year, today.year + MAX_MONTHS // 12 + 2)\nfestival_events = []  # (date, cents)\nfor holiday_date, holiday_name in holidays.Mauritius(years=years_needed).items():\n    for festival_name, spike_cents in FESTIVAL_SPIKE_CENTS.items():\n        if holiday_name.startswith(festival_name):\n            festival_events.append((holiday_date, spike_cents))\nfor year in years_needed:\n    for month, _event_name, spike_cents in MANUAL_EVENTS:\n        festival_events.append((date(year, month, 1), spike_cents))\n \nspike_by_month = {}\nfor event_date, spike_cents in festival_events:\n    key = (event_date.year, event_date.month)\n    spike_by_month[key] = spike_by_month.get(key, 0) + spike_cents\n \n \ndef surplus_for(month_date):\n    spike = spike_by_month.get((month_date.year, month_date.month), 0)\n    return (monthly_income - monthly_routine) - spike\n \n \n# --- Step 5: buffer + safe-to-spend now ---\nbuffer = monthly_routine * int(user.get(\"bufferWeeks\") or 4) // 4\nsafe_base = balance - buffer\nreserve_until = today + relativedelta(days=RESERVE_WINDOW_DAYS)\nfestival_reserve = sum(\n    cents for event_date, cents in festival_events\n    if today <= event_date <= reserve_until\n) if RESERVE_UPCOMING_FESTIVALS else 0\nsafe_now = safe_base - festival_reserve\n \n# --- Step 6: verdict / timeline ---\nreachable = True\nif target <= safe_now:\n    verdict, months = \"SAFE\", 0\nelif target <= safe_now + buffer:\n    verdict, months = \"TIGHT\", 0\nelse:\n    # Timeline starts from the base, then subtracts each month's spikes once.\n    still_due_this_month = sum(\n        cents for event_date, cents in festival_events\n        if event_date >= today\n        and (event_date.year, event_date.month) == (today.year, today.month)\n    )\n    verdict, months, cursor = \"NOT_SAFE\", 0, today\n    accumulated = safe_base - still_due_this_month\n    while accumulated < target and months < MAX_MONTHS:\n        cursor += relativedelta(months=1)\n        accumulated += surplus_for(cursor)\n        months += 1\n    reachable = accumulated >= target\n \n# --- Output: original keys plus passthrough for the goal save ---\nreturn [{\"json\": {\n    **passthrough,\n    \"verdict\": verdict,\n    \"monthsNeeded\": months,\n    \"inferredBalance\": balance,\n    \"safeToSpend\": safe_now,\n    \"reachable\": reachable,\n}}]\n"
       },
       "id": "cfc59b35-a82a-40b0-8be2-6666cbcceb83",
       "name": "Affordability Algorithm",
@@ -565,6 +565,54 @@
               },
               "renameOutput": true,
               "outputKey": "updateGoal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "673fcc8c-eb53-467e-a490-e1b16f8fa5ea",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "updateSalary",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "updateSalary"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "32662068-713d-43e0-b778-984c628740de",
+                    "leftValue": "={{ $json.inputType || $('Webhook').item.json.body.inputType }}",
+                    "rightValue": "saveExpenses",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "saveExpenses"
             }
           ]
         },
@@ -948,7 +996,7 @@
     {
       "parameters": {
         "language": "pythonNative",
-        "pythonCode": "# --- Build Acknowledgement (Python Code node, right before Final Respond) ---\n# Every branch ends here. Detects what arrived and returns a short receipt.\n# Mode: Run Once for All Items. No imports needed.\n \nincoming = [entry[\"json\"] for entry in _items]\nfirst = incoming[0] if incoming else {}\n \n \ndef ack(record, saved, message_key, **extra):\n    return [{\"json\": {\"success\": True, \"saved\": saved, \"record\": record,\n                      \"messageKey\": message_key, **extra}}]\n \n \n# --- Transactions inserted (one item per saved transaction) ---\nif \"amount\" in first and \"direction\" in first:\n    return ack(\"transaction\", True, \"TRANSACTION_SAVED\",\n               count=len(incoming),\n               totalCents=sum(int(doc.get(\"amount\", 0)) for doc in incoming),\n               ids=[doc.get(\"id\") or doc.get(\"_id\") for doc in incoming])\n \n# --- Goal upserted (a goal document has targetAmount; the afford result does not) ---\nif \"goalKey\" in first and \"targetAmount\" in first:\n    return ack(\"goal\", True, \"GOAL_SAVED\",\n               goalKey=first.get(\"goalKey\"),\n               savedAmountCents=first.get(\"savedAmount\"),\n               verdict=first.get(\"verdict\"),\n               itemName=first.get(\"itemName\"),\n               timelineMonths=first.get(\"timelineMonths\"),\n               status=first.get(\"status\"))\n \n# --- Profile upserted (Firebase onboarding) ---\nif \"salary\" in first and \"bufferWeeks\" in first:\n    return ack(\"profile\", True, \"PROFILE_SAVED\")\n \n# --- Afford question: nothing saved, return the verdict ---\nif \"verdict\" in first:\n    return ack(\"afford\", False, \"AFFORD_\" + str(first[\"verdict\"]),\n               verdict=first[\"verdict\"],\n               monthsNeeded=first.get(\"monthsNeeded\"),\n               safeToSpendCents=first.get(\"safeToSpend\"),\n               reachable=first.get(\"reachable\", True))\n \n# --- Spending summary: nothing saved ---\nif \"topMovers\" in first or \"summaryData\" in first:\n    return ack(\"summary\", False, \"SUMMARY_READY\",\n               summary=first.get(\"topMovers\"))\n \nreturn ack(\"unknown\", False, \"NOTHING_TO_SAVE\")\n"
+        "pythonCode": "# --- Build Acknowledgement (Python Code node, right before Final Respond) ---\n# Every branch ends here. Detects what arrived and returns a short receipt.\n# Mode: Run Once for All Items. No imports needed.\n \nincoming = [entry[\"json\"] for entry in _items]\nfirst = incoming[0] if incoming else {}\n \n \ndef ack(record, saved, message_key, **extra):\n    return [{\"json\": {\"success\": True, \"saved\": saved, \"record\": record,\n                      \"messageKey\": message_key, **extra}}]\n \n \n# --- Transactions inserted (one item per saved transaction) ---\nif \"amount\" in first and \"direction\" in first:\n    return ack(\"transaction\", True, \"TRANSACTION_SAVED\",\n               count=len(incoming),\n               totalCents=sum(int(doc.get(\"amount\", 0)) for doc in incoming),\n               ids=[doc.get(\"id\") or doc.get(\"_id\") for doc in incoming])\n \n# --- Goal upserted (a goal document has targetAmount; the afford result does not) ---\nif \"goalKey\" in first and \"targetAmount\" in first:\n    return ack(\"goal\", True, \"GOAL_SAVED\",\n               goalKey=first.get(\"goalKey\"),\n               savedAmountCents=first.get(\"savedAmount\"),\n               verdict=first.get(\"verdict\"),\n               itemName=first.get(\"itemName\"),\n               timelineMonths=first.get(\"timelineMonths\"),\n               status=first.get(\"status\"))\n \n# --- Profile upserted (Firebase onboarding) ---\nif \"salary\" in first and \"bufferWeeks\" in first:\n    return ack(\"profile\", True, \"PROFILE_SAVED\")\n \n# --- Monthly expense list saved (Financial Overview) ---\nif \"monthlyExpenses\" in first:\n    expenses = first.get(\"monthlyExpenses\") or []\n    return ack(\"expenses\", True, \"EXPENSES_SAVED\", count=len(expenses),\n               totalCents=sum(int(e.get(\"amountCents\") or 0) for e in expenses))\n\n# --- Salary edited (Financial Overview) ---\nif \"salary\" in first:\n    return ack(\"salary\", True, \"SALARY_SAVED\", salaryCents=first.get(\"salary\"))\n\n# --- Afford question: nothing saved, return the verdict ---\nif \"verdict\" in first:\n    return ack(\"afford\", False, \"AFFORD_\" + str(first[\"verdict\"]),\n               verdict=first[\"verdict\"],\n               monthsNeeded=first.get(\"monthsNeeded\"),\n               safeToSpendCents=first.get(\"safeToSpend\"),\n               reachable=first.get(\"reachable\", True))\n \n# --- Spending summary: nothing saved ---\nif \"topMovers\" in first or \"summaryData\" in first:\n    return ack(\"summary\", False, \"SUMMARY_READY\",\n               summary=first.get(\"topMovers\"))\n \nreturn ack(\"unknown\", False, \"NOTHING_TO_SAVE\")\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1122,6 +1170,84 @@
         2368,
         800
       ]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Salary Edit Prep (Python Code node, \"updateSalary\" route) ---\n# The Financial Overview \"Edit\" on Monthly salary. Mode: Run Once for All Items.\n# Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n\nMAURITIUS_TZ = timezone(timedelta(hours=4))\n\nrequest = _items[0][\"json\"]\ntry:\n    salary = int(round(float(request.get(\"salaryCents\"))))\nexcept (TypeError, ValueError):\n    raise Exception(\"INVALID_SALARY: salaryCents must be a number\")\nif salary < 0:\n    raise Exception(\"INVALID_SALARY: salary cannot be negative\")\n\nreturn [{\"json\": {\n    \"userId\": request[\"userId\"],\n    \"salary\": salary,\n    \"updatedAt\": datetime.now(MAURITIUS_TZ).isoformat(timespec=\"seconds\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        1000
+      ],
+      "id": "d8b6d0fb-b3ec-4751-8db9-c837b8797bce",
+      "name": "Salary Edit Prep",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# --- Expenses Prep (Python Code node, \"saveExpenses\" route) ---\n# Saves the user's whole list of monthly expenses from the Financial Overview.\n# Their total becomes the \"usual monthly spending\" everywhere.\n# Mode: Run Once for All Items. Needs stdlib allow: datetime\nfrom datetime import datetime, timedelta, timezone\n\nMAURITIUS_TZ = timezone(timedelta(hours=4))\nGROUPS = {\"essential\", \"adjustable\", \"optional\"}\nMAX_ITEMS = 60\nMAX_NAME = 60\n\nrequest = _items[0][\"json\"]\nraw_items = request.get(\"monthlyExpenses\")\nif not isinstance(raw_items, list) or len(raw_items) > MAX_ITEMS:\n    raise Exception(\"INVALID_EXPENSES: send a list of up to 60 expenses\")\n\nexpenses = []\nfor raw in raw_items:\n    name = str((raw or {}).get(\"name\") or \"\").strip()[:MAX_NAME]\n    group = str((raw or {}).get(\"group\") or \"\").strip().lower()\n    try:\n        amount = int(round(float((raw or {}).get(\"amountCents\"))))\n    except (TypeError, ValueError):\n        raise Exception(\"INVALID_EXPENSES: every amount must be a number\")\n    if not name or amount <= 0 or group not in GROUPS:\n        raise Exception(\"INVALID_EXPENSES: each expense needs a name, an amount above 0 and a group\")\n    expenses.append({\"name\": name, \"amountCents\": amount, \"group\": group})\n\nreturn [{\"json\": {\n    \"userId\": request[\"userId\"],\n    \"monthlyExpenses\": expenses,\n    \"updatedAt\": datetime.now(MAURITIUS_TZ).isoformat(timespec=\"seconds\"),\n}}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        1180
+      ],
+      "id": "055cbaf1-311b-4a1c-98b7-a33d9f26d6aa",
+      "name": "Expenses Prep",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "userId",
+        "fields": "userId,salary,updatedAt",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        2816,
+        1000
+      ],
+      "id": "fda37ecd-f61f-4048-b41d-40790258e57a",
+      "name": "Save Salary",
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "users",
+        "updateKey": "userId",
+        "fields": "userId,monthlyExpenses,updatedAt",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.5,
+      "position": [
+        2816,
+        1180
+      ],
+      "id": "433a8628-b6ee-498a-9fa9-91659a107020",
+      "name": "Save Expenses",
+      "credentials": {
+        "mongoDb": {
+          "id": "vOpaUzKoAHovJROW",
+          "name": "MongoDB account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1656,6 +1782,20 @@
         ],
         [
           {
+            "node": "Salary Edit Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Expenses Prep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Respond Unknown Input",
             "type": "main",
             "index": 0
@@ -1730,6 +1870,64 @@
         [
           {
             "node": "myt_asr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salary Edit Prep": {
+      "main": [
+        [
+          {
+            "node": "Save Salary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expenses Prep": {
+      "main": [
+        [
+          {
+            "node": "Save Expenses",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Salary": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Expenses": {
+      "main": [
+        [
+          {
+            "node": "Build Acknowledgement",
             "type": "main",
             "index": 0
           }

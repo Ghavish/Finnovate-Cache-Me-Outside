@@ -13,7 +13,7 @@ export default function Sidebar() {
     <aside className="sidebar" aria-label="Main navigation">
       <div className="brand">
         <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
-        <span><strong>GOALPATH</strong><small>AI</small></span>
+        <span><strong>MoBudget</strong><small>Smart money planning</small></span>
       </div>
       <nav className="sidebar-nav">
         {links.map(({ to, label, icon: Icon }) => (

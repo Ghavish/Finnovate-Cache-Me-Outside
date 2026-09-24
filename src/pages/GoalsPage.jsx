@@ -73,7 +73,7 @@ function EditGoalModal({ goal, onClose, onSaved }) {
     <button type="button" className="modal-close" onClick={onClose} aria-label="Close"><X size={20} /></button>
     <div className="modal-kicker"><Pencil size={16} />Edit goal</div>
     <h2 id="edit-goal-title">{goal.itemName || 'Cash goal'}</h2>
-    <p>Update your savings or the goal amount. GoalPath re-checks the timeline when you save.</p>
+    <p>Update your savings or the goal amount. MoBudget re-checks the timeline when you save.</p>
     <div className="field-grid">
       <label><span>Goal amount</span><div className="money-input"><b>Rs</b><input name="targetAmount" type="number" min="1" step="0.01" value={form.targetAmount} onChange={update} /></div></label>
       <label><span>Saved so far</span><div className="money-input"><b>Rs</b><input name="savedAmount" type="number" min="0" step="0.01" value={form.savedAmount} onChange={update} /></div></label>
@@ -92,7 +92,7 @@ function RiskModal({ result, onClose, onAdd, adding }) {
   return <div className="modal-backdrop"><section className="risk-modal" role="dialog" aria-modal="true"><button className="modal-close" onClick={onClose} aria-label="Close"><X size={20} /></button><div className="modal-kicker"><Sparkles size={17} />Goal review</div><h2>Your risk profile</h2><p>Review this analysis before deciding whether to add the goal.</p>
     <div className={`verdict-banner ${badgeClass(result.verdict)}`}><Icon size={25} /><div><small>VERDICT</small><strong>{VERDICT_TEXT[result.verdict]}</strong></div></div>
     <div className="metric-grid"><article><small>Goal amount</small><strong>{money(result.targetAmount)}</strong></article><article><small>Safe to spend now</small><strong>{moneyFromCents(result.safeToSpendCents)}</strong></article><article><small>Time needed</small><strong>{timeNeeded}</strong></article></div>
-    <div className="explanation-box"><h3>Why GoalPath gave this result</h3><p>The goal amount is compared with the money you can safely spend today, after keeping a buffer for your usual spending and upcoming festivals. If it does not fit yet, GoalPath counts how many months of saving it takes.</p></div>
+    <div className="explanation-box"><h3>Why MoBudget gave this result</h3><p>The goal amount is compared with the money you can safely spend today, after keeping a buffer for your usual spending and upcoming festivals. If it does not fit yet, MoBudget counts how many months of saving it takes.</p></div>
     <div className="modal-actions"><button className="secondary-button" onClick={onClose}>Decline</button><button className="primary-button" onClick={onAdd} disabled={adding}>{adding && <LoaderCircle className="spinner" size={18} />}{adding ? 'Adding…' : 'Add goal'}</button></div></section></div>
 }
 
@@ -154,7 +154,7 @@ export default function GoalsPage({ startCreating = false }) {
 
   async function afterEdit() { setEditingGoal(null); await loadGoals() }
 
-  return <main className="main-content goals-page"><section className="page-title-row"><div><span className="eyebrow">MY GOALS</span><h1>{creating ? 'Create a new goal' : 'Your financial goals'}</h1><p>{creating ? 'Tell GoalPath what you want to achieve and review the risk profile before adding it.' : 'Track your saved goals and see how they fit your financial capacity.'}</p></div><button className="new-goal-button" onClick={() => setCreating(true)}><Plus size={18} />New goal</button></section>
+  return <main className="main-content goals-page"><section className="page-title-row"><div><span className="eyebrow">MY GOALS</span><h1>{creating ? 'Create a new goal' : 'Your financial goals'}</h1><p>{creating ? 'Tell MoBudget what you want to achieve and review the risk profile before adding it.' : 'Track your saved goals and see how they fit your financial capacity.'}</p></div><button className="new-goal-button" onClick={() => setCreating(true)}><Plus size={18} />New goal</button></section>
   {!creating ? <>
     <div className="saved-heading"><div><span className="eyebrow">YOUR PLAN</span><h2>Saved goals</h2></div><span>{goals ? `${goals.length} active` : '…'}</span></div>
     {loadError && <div className="load-error"><p>{loadError}</p><button type="button" className="secondary-button" onClick={loadGoals}><RotateCw size={16} /> Try again</button></div>}

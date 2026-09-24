@@ -272,3 +272,67 @@
   .method-grid button { min-height:112px; padding:10px; text-align:center }
   .camera-frame { max-height:65vh }
 }
+
+/* Branding */
+.brand small { letter-spacing:.06em }
+
+/* Financial Overview */
+.fo-note { color:#8a90a5; font-size:12px; line-height:1.4 }
+.fo-edit-actions { display:flex; align-items:center; gap:12px }
+.fo-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:19px }
+.fo-card-head h2 { margin:0 }
+.fo-edit { display:inline-flex; align-items:center; gap:6px }
+.fo-edit:disabled { opacity:.5 }
+.expense-hint { margin:0 0 6px; color:var(--muted); line-height:1.6 }
+.expense-group { margin-top:10px; border-radius:10px; background:#f8f8fc }
+.expense-group .expense-row { width:100%; margin:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer }
+.expense-group.essential { color:#158064 }
+.expense-group.adjustable { color:#ac700d }
+.expense-group.optional { color:#7442b8 }
+.expense-row > span { display:grid; gap:2px }
+.expense-row > span small { color:#8a90a5; font-size:12px }
+.expense-row > strong { display:inline-flex; align-items:center; gap:8px }
+.expense-row > strong svg { transition:transform .15s }
+.expense-group.open .expense-row > strong svg { transform:rotate(180deg) }
+.expense-items { display:grid; margin:0; padding:0 11px 8px; list-style:none }
+.expense-items li { display:flex; justify-content:space-between; gap:12px; border-top:1px solid #e7e5ef; padding:9px 0; color:var(--navy); font-size:14px }
+.expense-items li span { overflow-wrap:anywhere }
+.expense-items li b { flex:none }
+.expense-empty { margin:0; padding:0 11px 12px; color:#8a90a5; font-size:13px }
+.transaction-list .tx-label { display:flex; align-items:flex-start; gap:9px; min-width:0 }
+.transaction-list .tx-label > svg { flex:none; margin-top:2px; color:#b42318 }
+.transaction-list .tx-label > svg.income { color:#158064 }
+.transaction-list .tx-label > span { display:grid; min-width:0 }
+.transaction-list .tx-label b { font-weight:600; overflow-wrap:anywhere }
+.transaction-list .tx-label small { color:#8a90a5; font-size:12px; overflow-wrap:anywhere }
+.transaction-list strong { white-space:nowrap }
+
+/* Edit monthly expenses dialog */
+.expenses-modal { width:min(760px,100%) }
+.expense-editor-group { margin-top:18px; border-radius:14px; padding:14px; background:#f8f8fc }
+.expense-editor-group header { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap }
+.expense-editor-group h3 { margin:0; font-size:16px }
+.expense-editor-group.essential h3 { color:#158064 }
+.expense-editor-group.adjustable h3 { color:#ac700d }
+.expense-editor-group.optional h3 { color:#7442b8 }
+.expense-editor-group header small { color:#8a90a5 }
+.expense-editor-row { position:relative; display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) 36px; gap:8px; margin-top:10px }
+.expense-editor-row > input, .expense-editor-row select { width:100%; min-width:0; min-height:44px; border:1px solid #d7d4e2; border-radius:10px; padding:0 11px; color:var(--navy); background:#fff }
+.expense-editor-row .money-input { min-height:44px; padding:0 11px; background:#fff }
+.expense-editor-row .money-input input { width:100%; min-width:0; padding-left:8px; background:transparent }
+.expense-editor-row .icon-button { position:static; align-self:center }
+
+@media(max-width:760px){
+  .expense-editor-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 36px }
+  .expense-editor-row > input { grid-column:1 / -1 }
+  .transaction-list li { grid-template-columns:50px minmax(0,1fr) auto }
+}
+@media(max-width:760px){
+  .modal-backdrop { padding:10px }
+  .risk-modal { padding:24px 16px }
+  .expense-editor-group { padding:12px 10px }
+  .expense-editor-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 32px; gap:6px }
+  .expense-editor-row select { padding:0 4px 0 8px; font-size:14px }
+  .expense-editor-row .money-input { padding:0 8px }
+  .expense-editor-row .money-input input { padding-left:6px }
+}

@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
   return <main className="main-content">
     <section className="page-heading"><span className="eyebrow">DASHBOARD</span><h1>{greeting()}{name ? `, ${name}` : ''}</h1><p>Your financial picture and goals are connected across every screen.</p></section>
-    <section className="dashboard-hero"><div><span><TrendingUp size={16} />Financial planning</span><h2>Build your financial picture.</h2><p>Add your income and expenses so GoalPath can calculate your safe saving capacity and guide your goals.</p><Link to="/input-data">Get started <ArrowRight size={18} /></Link></div></section>
+    <section className="dashboard-hero"><div><span><TrendingUp size={16} />Financial planning</span><h2>Build your financial picture.</h2><p>Add your income and expenses so MoBudget can calculate your safe saving capacity and guide your goals.</p><Link to="/input-data">Get started <ArrowRight size={18} /></Link></div></section>
     {error && <div className="load-error"><p>{error}</p><button type="button" className="secondary-button" onClick={load}><RotateCw size={16} /> Try again</button></div>}
     <section className="summary-grid">
       <article><CircleDollarSign /><small>Monthly salary</small><strong>{value((d) => moneyFromCents(d.salaryCents))}</strong></article>

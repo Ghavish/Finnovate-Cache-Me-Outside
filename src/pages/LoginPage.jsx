@@ -34,7 +34,7 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-panel login-brand-panel">
-        <div className="login-logo">GOALPATH <span>AI</span></div>
+        <div className="login-logo">Mo<span>Budget</span></div>
         <div>
           <div className="login-icon"><Target size={30} /></div>
           <h1>Plan your goals.<br />Understand your money.</h1>
@@ -46,7 +46,7 @@ export default function LoginPage() {
       <section className="login-panel login-form-panel">
         <form onSubmit={submit}>
           <span className="eyebrow">WELCOME BACK</span>
-          <h2>Log in to GoalPath</h2>
+          <h2>Log in to MoBudget</h2>
           <p>Enter your email and password to continue.</p>
           
           <label>Email address
@@ -66,7 +66,7 @@ export default function LoginPage() {
           
           <button className="primary-button" type="submit">Log in</button>
           
-          <p className="auth-switch">New to GoalPath? <Link to="/signup">Create an account</Link></p>
+          <p className="auth-switch">New to MoBudget? <Link to="/signup">Create an account</Link></p>
         </form>
       </section>
     </main>

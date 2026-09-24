@@ -15,7 +15,7 @@ export default function Header() {
 
   return (
     <header className="topbar">
-      <div className="mobile-brand"><Menu size={23} /><strong>GOALPATH</strong></div>
+      <div className="mobile-brand"><Menu size={23} /><strong>MoBudget</strong></div>
       <div className="topbar-actions">
         <button type="button"><Globe2 size={18} />EN / KR</button>
         <button type="button">

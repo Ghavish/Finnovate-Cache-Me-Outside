@@ -44,7 +44,7 @@ export default function Signup() {
   return (
     <main className="login-page">
       <section className="login-panel login-brand-panel">
-        <div className="login-logo">GOALPATH <span>AI</span></div>
+        <div className="login-logo">Mo<span>Budget</span></div>
         <div>
           <div className="login-icon"><Target size={30} /></div>
           <h1>Plan your goals.<br />Understand your money.</h1>
