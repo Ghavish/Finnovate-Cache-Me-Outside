@@ -336,3 +336,18 @@
   .expense-editor-row .money-input { padding:0 8px }
   .expense-editor-row .money-input input { padding-left:6px }
 }
+
+/* Language picker (header, login and signup) */
+.language-picker { display:flex; align-items:center; gap:8px; margin-right:8px; color:var(--navy) }
+.language-picker svg { flex:0 0 auto }
+.language-picker select { min-height:40px; max-width:170px; border:1px solid #8b5cf6; border-radius:8px; padding:0 10px; color:var(--navy); background:#fff; font-weight:600 }
+.login-form-panel { position:relative }
+.auth-language { position:absolute; top:22px; right:22px; margin:0 }
+@media(max-width:760px){
+  .topbar .language-picker { margin-right:0 }
+  .topbar .language-picker svg { display:none }
+  .topbar .language-picker select { max-width:118px; min-height:36px; padding:0 6px; font-size:13px }
+  .auth-language { top:14px; right:14px }
+}
+.login-form-panel .auth-language { display:flex; margin-top:0; font-weight:600 }
+@media(max-width:760px){ .topbar .language-picker select { max-width:64px } }

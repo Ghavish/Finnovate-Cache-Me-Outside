@@ -3,9 +3,12 @@ import { Eye, EyeOff, Target } from 'lucide-react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { logIn, authMessage } from '../firebase/authService.js' // 1. Added Firebase imports
+import { useLanguage } from '../i18n/LanguageContext.jsx'
+import LanguagePicker from '../components/layout/LanguagePicker.jsx'
 
 export default function LoginPage() {
   const { user } = useAuth() // 2. Removed 'login' from context extraction
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   
@@ -37,36 +40,37 @@ export default function LoginPage() {
         <div className="login-logo">Mo<span>Budget</span></div>
         <div>
           <div className="login-icon"><Target size={30} /></div>
-          <h1>Plan your goals.<br />Understand your money.</h1>
-          <p>Build a clearer path toward the financial goals that matter to you.</p>
+          <h1>{t('Plan your goals.')}<br />{t('Understand your money.')}</h1>
+          <p>{t('Build a clearer path toward the financial goals that matter to you.')}</p>
         </div>
-        <small>Your financial journey starts here.</small>
+        <small>{t('Your financial journey starts here.')}</small>
       </section>
       
       <section className="login-panel login-form-panel">
+        <LanguagePicker className="auth-language" />
         <form onSubmit={submit}>
-          <span className="eyebrow">WELCOME BACK</span>
-          <h2>Log in to MoBudget</h2>
-          <p>Enter your email and password to continue.</p>
+          <span className="eyebrow">{t('WELCOME BACK')}</span>
+          <h2>{t('Log in to MoBudget')}</h2>
+          <p>{t('Enter your email and password to continue.')}</p>
           
-          <label>Email address
+          <label>{t('Email address')}
             <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           
-          <label>Password
+          <label>{t('Password')}
             <div className="password-input">
               <input type={show ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-              <button type="button" onClick={() => setShow((v) => !v)} aria-label="Show or hide password">
+              <button type="button" onClick={() => setShow((v) => !v)} aria-label={t('Show or hide password')}>
                 {show ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
             </div>
           </label>
           
-          {error && <p className="form-error">{error}</p>}
+          {error && <p className="form-error">{t(error)}</p>}
           
-          <button className="primary-button" type="submit">Log in</button>
+          <button className="primary-button" type="submit">{t('Log in')}</button>
           
-          <p className="auth-switch">New to MoBudget? <Link to="/signup">Create an account</Link></p>
+          <p className="auth-switch">{t('New to MoBudget?')} <Link to="/signup">{t('Create an account')}</Link></p>
         </form>
       </section>
     </main>

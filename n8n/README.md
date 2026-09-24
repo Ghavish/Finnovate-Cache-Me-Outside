@@ -25,7 +25,7 @@ MongoDB collections used: `users` (profile, salary and the `monthlyExpenses` lis
 
 | Route (`inputType`) | Reply |
 | --- | --- |
-| `receipt`, `document`, `voiceNote` | Preview only, nothing saved: `record: "preview"`, `docType`, `summary`, `confidenceScore`, `lowConfidence`, `flags`, `lineItems` (cents) |
+| `receipt`, `document`, `voiceNote` (+ optional `language`: `en`, `fr` or `mfe`, for the summary) | Preview only, nothing saved: `record: "preview"`, `docType`, `summary`, `confidenceScore`, `lowConfidence`, `flags`, `lineItems` (cents) |
 | `confirmTransaction` | Saves transactions (and the salary for a payslip): `record: "transaction"`, `count`, `totalCents` |
 | `afford` | Nothing saved: `record: "afford"`, `verdict`, `monthsNeeded`, `safeToSpendCents`, `reachable` |
 | `goal`, `updateGoal` | Saves the goal: `record: "goal"`, `goalKey`, `savedAmountCents`, `verdict` |

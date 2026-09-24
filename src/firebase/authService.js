@@ -5,6 +5,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth } from "./config";
+import { k } from "../i18n/strings.js";
  
 export function signUp(email, password) {
   return createUserWithEmailAndPassword(auth, email, password);
@@ -27,11 +28,11 @@ export async function getIdToken() {
 // --- Turn Firebase error codes into readable text ---
 export function authMessage(code) {
   const map = {
-    "auth/email-already-in-use": "That email is already registered.",
-    "auth/invalid-email": "That email address looks wrong.",
-    "auth/weak-password": "Password should be at least 6 characters.",
-    "auth/invalid-credential": "Wrong email or password.",
-    "auth/user-not-found": "No account with that email.",
+    "auth/email-already-in-use": k("That email is already registered."),
+    "auth/invalid-email": k("That email address looks wrong."),
+    "auth/weak-password": k("Password should be at least 6 characters."),
+    "auth/invalid-credential": k("Wrong email or password."),
+    "auth/user-not-found": k("No account with that email."),
   };
-  return map[code] || "Something went wrong. Try again.";
+  return map[code] || k("Something went wrong. Try again.");
 }

@@ -4,6 +4,8 @@ import { Eye, EyeOff, Target } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { signUp, authMessage } from "../../firebase/authService";
 import { callN8n } from "../../firebase/apiClient";
+import { useLanguage } from "../../i18n/LanguageContext.jsx";
+import LanguagePicker from "../layout/LanguagePicker.jsx";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -47,45 +50,46 @@ export default function Signup() {
         <div className="login-logo">Mo<span>Budget</span></div>
         <div>
           <div className="login-icon"><Target size={30} /></div>
-          <h1>Plan your goals.<br />Understand your money.</h1>
-          <p>Build a clearer path toward the financial goals that matter to you.</p>
+          <h1>{t('Plan your goals.')}<br />{t('Understand your money.')}</h1>
+          <p>{t('Build a clearer path toward the financial goals that matter to you.')}</p>
         </div>
-        <small>Your financial journey starts here.</small>
+        <small>{t('Your financial journey starts here.')}</small>
       </section>
 
       <section className="login-panel login-form-panel">
+        <LanguagePicker className="auth-language" />
         <form onSubmit={handleSubmit}>
-          <span className="eyebrow">GET STARTED</span>
-          <h2>Create your account</h2>
-          <p>Sign up to start planning your goals.</p>
+          <span className="eyebrow">{t('GET STARTED')}</span>
+          <h2>{t('Create your account')}</h2>
+          <p>{t('Sign up to start planning your goals.')}</p>
 
-          <label>Email address
+          <label>{t('Email address')}
             <input type="email" autoComplete="email" required
               value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
 
-          <label>Password
+          <label>{t('Password')}
             <div className="password-input">
               <input type={show ? "text" : "password"} autoComplete="new-password" required minLength={6}
                 value={password} onChange={(e) => setPassword(e.target.value)} />
-              <button type="button" onClick={() => setShow((v) => !v)} aria-label="Show or hide password">
+              <button type="button" onClick={() => setShow((v) => !v)} aria-label={t('Show or hide password')}>
                 {show ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
             </div>
           </label>
 
-          <label>Monthly salary (Rs, optional)
+          <label>{t('Monthly salary (Rs, optional)')}
             <input type="number" min="0" inputMode="numeric"
               value={salary} onChange={(e) => setSalary(e.target.value)} />
           </label>
 
-          {error && <p className="form-error">{error}</p>}
+          {error && <p className="form-error">{t(error)}</p>}
 
           <button className="primary-button" type="submit" disabled={submitting}>
-            {submitting ? "Creating account..." : "Create account"}
+            {submitting ? t('Creating account...') : t('Create account')}
           </button>
 
-          <p className="auth-switch">Have an account? <Link to="/login">Log in</Link></p>
+          <p className="auth-switch">{t('Have an account?')} <Link to="/login">{t('Log in')}</Link></p>
         </form>
       </section>
     </main>
