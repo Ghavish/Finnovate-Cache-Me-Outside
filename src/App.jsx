@@ -1,26 +1,19 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
-
-// Pages
 import AICoachPage from './pages/AICoachPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import FinancialOverviewPage from './pages/FinancialOverviewPage.jsx'
 import GoalsPage from './pages/GoalsPage.jsx'
 import InputDataPage from './pages/InputDataPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
-import SignupPage from './components/auth/Signup.jsx' 
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import AnalysisResultPage from './pages/AnalysisResultPage.jsx'
 
 export default function App() {
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-
-      {/* Protected Dashboard Routes */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
@@ -33,9 +26,6 @@ export default function App() {
           <Route path="/coach" element={<AICoachPage />} />
         </Route>
       </Route>
-
-      {/* Fallback Route */}
-
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
