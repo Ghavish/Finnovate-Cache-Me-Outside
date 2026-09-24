@@ -31,8 +31,8 @@ export default function Signup() {
     try {
       // create the users profile row (salary optional, editable later)
       await callN8n({
-        inputType: "createProfile",
-        salary: salary ? Number(salary) * 100 : 0,
+        inputType: "profile",
+        salaryCents: salary ? Math.round(Number(salary) * 100) : 0,
       });
     } catch (err) {
       console.error("Profile creation failed:", err);

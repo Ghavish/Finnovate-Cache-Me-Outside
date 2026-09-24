@@ -17,7 +17,8 @@ React + Vite frontend for GoalPath. Sign-in uses Firebase Authentication, and ba
 | `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain, e.g. `your-project.firebaseapp.com`. |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID. |
 | `VITE_FIREBASE_APP_ID` | Firebase web app ID. |
-| `VITE_N8N_WEBHOOK_URL` | n8n webhook that receives authenticated requests. |
+| `VITE_N8N_WEBHOOK_URL` | Main n8n webhook (`.../webhook/api/v1/process`): AI reading of uploads and voice notes, and all saves. |
+| `VITE_N8N_READ_URL` | Optional. Read API webhook (`.../webhook/api/v1/read`). If left out, the app uses the Main URL with `/process` swapped for `/read`. |
 
 Email/Password sign-in must be enabled in the Firebase console (Authentication → Sign-in method).
 
@@ -42,9 +43,15 @@ Anything starting with `VITE_` is bundled into the browser code, so it is public
 
 Unknown URLs show a Page Not Found screen. Protected routes redirect signed-out users to `/login`.
 
-## Shared data
+## Data and the n8n backend
 
-Goals and financial data are currently stored in browser `localStorage` and are not yet tied to the signed-in user. Adding a goal or editing salary/expenses updates the other screens. Use **Reset demo data** on Dashboard to restore the starting values.
+These screens read and write through n8n (MongoDB behind it), per signed-in user:
+
+- **Dashboard** cards: `getDashboard` on the Read API (salary, usual monthly spending, active goals).
+- **Financial Input**: uploads (images or PDF) and voice notes go to Main for an AI preview (document type, summary, confidence score). Nothing is saved until **Analyse my finances**, which sends `confirmTransaction`. A confirmed payslip also updates the profile salary.
+- **My Goals**: `listGoals` on the Read API; new goals are checked with `afford` and saved with `goal`; edits use `updateGoal`.
+
+Financial Overview and AI Coach still use demo data from browser `localStorage`.
 
 ## Quality checks
 
