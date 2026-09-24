@@ -1,0 +1,166 @@
+[
+  {
+    "userId": "7TFRMSSjUQV6P9ciq1Gum3zCsHg2",
+    "email": "anjali.test@goalpath.mu",
+    "salary": 4200000,
+    "manualBalance": 6500000,
+    "manualBalanceDate": "2026-08-31",
+    "bufferWeeks": 4,
+    "monthlyExpenses": [
+      {
+        "name": "Rent",
+        "amountCents": 1100000,
+        "group": "essential"
+      },
+      {
+        "name": "Electricity",
+        "amountCents": 131300,
+        "group": "essential"
+      },
+      {
+        "name": "Groceries",
+        "amountCents": 559000,
+        "group": "essential"
+      },
+      {
+        "name": "Bus / Metro fares",
+        "amountCents": 100000,
+        "group": "essential"
+      },
+      {
+        "name": "Phone & internet",
+        "amountCents": 119900,
+        "group": "essential"
+      },
+      {
+        "name": "Eating out",
+        "amountCents": 84400,
+        "group": "adjustable"
+      }
+    ],
+    "updatedAt": "2026-09-24T21:35:40+04:00"
+  },
+  {
+    "userId": "kdrTXKMk7dX46nrpBW3BYWMvC422",
+    "email": "jeanmarc.test@goalpath.mu",
+    "salary": 2800000,
+    "manualBalance": 1800000,
+    "manualBalanceDate": "2026-08-31",
+    "bufferWeeks": 4,
+    "monthlyExpenses": [
+      {
+        "name": "Rent",
+        "amountCents": 850000,
+        "group": "essential"
+      },
+      {
+        "name": "Electricity",
+        "amountCents": 96900,
+        "group": "essential"
+      },
+      {
+        "name": "Groceries",
+        "amountCents": 401400,
+        "group": "essential"
+      },
+      {
+        "name": "Bus / Metro fares",
+        "amountCents": 80000,
+        "group": "essential"
+      },
+      {
+        "name": "Phone & internet",
+        "amountCents": 79900,
+        "group": "essential"
+      },
+      {
+        "name": "Eating out",
+        "amountCents": 92000,
+        "group": "adjustable"
+      }
+    ],
+    "updatedAt": "2026-09-24T21:35:40+04:00"
+  },
+  {
+    "userId": "Kr72e8lbzgdaYyl4lme6c1hY1Gx2",
+    "email": "sarah.test@goalpath.mu",
+    "salary": 5500000,
+    "manualBalance": 12000000,
+    "manualBalanceDate": "2026-08-31",
+    "bufferWeeks": 6,
+    "monthlyExpenses": [
+      {
+        "name": "Rent",
+        "amountCents": 1400000,
+        "group": "essential"
+      },
+      {
+        "name": "Electricity",
+        "amountCents": 171600,
+        "group": "essential"
+      },
+      {
+        "name": "Groceries",
+        "amountCents": 754800,
+        "group": "essential"
+      },
+      {
+        "name": "Fuel",
+        "amountCents": 240000,
+        "group": "essential"
+      },
+      {
+        "name": "Phone & internet",
+        "amountCents": 99900,
+        "group": "essential"
+      },
+      {
+        "name": "Eating out",
+        "amountCents": 75900,
+        "group": "adjustable"
+      }
+    ],
+    "updatedAt": "2026-09-24T21:35:40+04:00"
+  },
+  {
+    "userId": "0MYcJLv5kHdhh73IayRSaV1XwCT2",
+    "email": "yash.test@goalpath.mu",
+    "salary": 2000000,
+    "manualBalance": 600000,
+    "manualBalanceDate": "2026-08-31",
+    "bufferWeeks": 2,
+    "monthlyExpenses": [
+      {
+        "name": "Rent",
+        "amountCents": 750000,
+        "group": "essential"
+      },
+      {
+        "name": "Electricity",
+        "amountCents": 87000,
+        "group": "essential"
+      },
+      {
+        "name": "Groceries",
+        "amountCents": 332800,
+        "group": "essential"
+      },
+      {
+        "name": "Bus / Metro fares",
+        "amountCents": 70000,
+        "group": "essential"
+      },
+      {
+        "name": "Phone & internet",
+        "amountCents": 50000,
+        "group": "essential"
+      },
+      {
+        "name": "Eating out",
+        "amountCents": 77600,
+        "group": "adjustable"
+      }
+    ],
+    "updatedAt": "2026-09-24T21:35:40+04:00"
+  }
+]

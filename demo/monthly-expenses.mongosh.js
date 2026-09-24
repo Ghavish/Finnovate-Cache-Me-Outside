@@ -1,7 +1,7 @@
 // Gives each mock user an Essential / Adjustable / Optional expense list.
 // Amounts are the monthly average of their Jun-Sep 2026 transactions.
 
-db.users.updateOne({ userId: "TEST_UID_1" }, { $set: { monthlyExpenses: [
+db.users.updateOne({ userId: "7TFRMSSjUQV6P9ciq1Gum3zCsHg2" }, { $set: { monthlyExpenses: [
     { name: "Rent", amountCents: 1100000, group: "essential" },
     { name: "Electricity", amountCents: 131300, group: "essential" },
     { name: "Groceries", amountCents: 559000, group: "essential" },
@@ -9,7 +9,7 @@ db.users.updateOne({ userId: "TEST_UID_1" }, { $set: { monthlyExpenses: [
     { name: "Phone & internet", amountCents: 119900, group: "essential" },
     { name: "Eating out", amountCents: 84400, group: "adjustable" }
 ] } });
-db.users.updateOne({ userId: "TEST_UID_2" }, { $set: { monthlyExpenses: [
+db.users.updateOne({ userId: "kdrTXKMk7dX46nrpBW3BYWMvC422" }, { $set: { monthlyExpenses: [
     { name: "Rent", amountCents: 850000, group: "essential" },
     { name: "Electricity", amountCents: 96900, group: "essential" },
     { name: "Groceries", amountCents: 401400, group: "essential" },
@@ -17,7 +17,7 @@ db.users.updateOne({ userId: "TEST_UID_2" }, { $set: { monthlyExpenses: [
     { name: "Phone & internet", amountCents: 79900, group: "essential" },
     { name: "Eating out", amountCents: 92000, group: "adjustable" }
 ] } });
-db.users.updateOne({ userId: "TEST_UID_3" }, { $set: { monthlyExpenses: [
+db.users.updateOne({ userId: "Kr72e8lbzgdaYyl4lme6c1hY1Gx2" }, { $set: { monthlyExpenses: [
     { name: "Rent", amountCents: 1400000, group: "essential" },
     { name: "Electricity", amountCents: 171600, group: "essential" },
     { name: "Groceries", amountCents: 754800, group: "essential" },
@@ -25,7 +25,7 @@ db.users.updateOne({ userId: "TEST_UID_3" }, { $set: { monthlyExpenses: [
     { name: "Phone & internet", amountCents: 99900, group: "essential" },
     { name: "Eating out", amountCents: 75900, group: "adjustable" }
 ] } });
-db.users.updateOne({ userId: "TEST_UID_4" }, { $set: { monthlyExpenses: [
+db.users.updateOne({ userId: "0MYcJLv5kHdhh73IayRSaV1XwCT2" }, { $set: { monthlyExpenses: [
     { name: "Rent", amountCents: 750000, group: "essential" },
     { name: "Electricity", amountCents: 87000, group: "essential" },
     { name: "Groceries", amountCents: 332800, group: "essential" },
