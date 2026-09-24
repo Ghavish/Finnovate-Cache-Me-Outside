@@ -14,12 +14,13 @@ MongoDB collections used: `users` (profile, salary and the `monthlyExpenses` lis
 
 ## n8n setup these workflows need
 
-- **Python (Native) Code nodes:** the Python task runner must be enabled. Its allow lists need these modules:
-  - Standard library: `json`, `urllib`, `re`, `datetime` (`N8N_RUNNERS_STDLIB_ALLOW`).
-  - External packages: `holidays`, `dateutil` (`N8N_RUNNERS_EXTERNAL_ALLOW`), installed in the runner's Python.
-- **Credentials:** MongoDB, Google Gemini (PaLM) API, and a Header Auth credential for the myt speech-to-text API.
+- **No Python needed.** Every Code node is JavaScript, which n8n runs out of the box (tested on n8n 2.40.6 started with `npx n8n`). Earlier versions used Python Code nodes, which need n8n's separate Python runner.
+- **Login check:** each workflow starts with "Verify Firebase Token", an HTTP Request to Google that checks the user's Firebase ID token. "Auth Bouncer" then adds the verified `userId` and `email` to the request. A missing or fake token gets a 401.
+- **Credentials:** MongoDB, Google Gemini (PaLM) API, and a Header Auth credential for the myt speech-to-text API. After importing, open any node with a warning and pick the credential again.
 - **Model:** every Gemini node uses `models/gemini-2.5-flash` at temperature 0.
 - **CORS:** each webhook allows any origin (`*`). Requests are still protected by the Firebase ID token check.
+- **Turn them on:** in n8n 2.x, click **Publish** on each workflow (older versions call it **Active**). Production webhook URLs (`/webhook/...`) only answer while a workflow is published.
+- **Festival dates:** the Affordability Algorithm (and its copy in the AI Coach) has Mauritius festival dates for 2024 to 2040 built in, generated from the Python `holidays` library. Refresh them before 2029 so goal timelines keep 10 years of festivals.
 
 ## Replies the app relies on
 

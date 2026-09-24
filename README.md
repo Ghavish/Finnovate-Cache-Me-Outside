@@ -60,6 +60,10 @@ AI Coach still uses demo data from browser `localStorage`.
 
 **Scan with camera** shows a live view from the back camera. The photo is shrunk to at most 1600 px (JPEG) and sent through the same image route as an upload. Browsers only allow the live view on `https` pages or `localhost`. On a plain `http` address, such as testing from your phone at `http://<laptop-ip>:5173`, the page offers your phone's camera app instead, which works anywhere.
 
+## Demo data
+
+`demo/` has the payslip and receipt files for the demo video, and `npm run seed:demo` loads the demo user's data into MongoDB. See `demo/README.md`.
+
 ## Languages
 
 MoBudget is available in English, French and Kreol Morisien. Users pick a language from the menu in the header (or on the login and signup pages). The choice is remembered in the browser.
