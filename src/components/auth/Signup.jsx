@@ -2,12 +2,15 @@
 import { useState } from "react";
 import { Eye, EyeOff, Target } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { signUp, authMessage } from "../../firebase/authService";
+import { signUp, updateName, authMessage } from "../../firebase/authService";
 import { callN8n } from "../../firebase/apiClient";
 import { useLanguage } from "../../i18n/LanguageContext.jsx";
 import LanguagePicker from "../layout/LanguagePicker.jsx";
+import Logo from "../layout/Logo.jsx";
+import ThemeToggle from "../layout/ThemeToggle.jsx";
 
 export default function Signup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [salary, setSalary] = useState("");
@@ -30,7 +33,14 @@ export default function Signup() {
       return;
     }
 
-    // The account exists now, so a failed profile call must not block the user.
+    // The account exists now, so a failed name or profile call must not block the user.
+    // They can still set the name later from the header.
+    try {
+      await updateName(name);
+    } catch (err) {
+      console.error("Saving the name failed:", err);
+    }
+
     try {
       // Create the profile row. A blank salary stays empty, so the app asks for a payslip later.
       await callN8n({
@@ -47,7 +57,8 @@ export default function Signup() {
   return (
     <main className="login-page">
       <section className="login-panel login-brand-panel">
-        <div className="login-logo">Mo<span>Budget</span></div>
+        <div className="aurora" aria-hidden="true" />
+        <div className="login-logo"><Logo size={36} /></div>
         <div>
           <div className="login-icon"><Target size={30} /></div>
           <h1>{t('Plan your goals.')}<br />{t('Understand your money.')}</h1>
@@ -57,11 +68,16 @@ export default function Signup() {
       </section>
 
       <section className="login-panel login-form-panel">
-        <LanguagePicker className="auth-language" />
+        <div className="auth-language"><LanguagePicker /><ThemeToggle /></div>
         <form onSubmit={handleSubmit}>
           <span className="eyebrow">{t('GET STARTED')}</span>
           <h2>{t('Create your account')}</h2>
           <p>{t('Sign up to start planning your goals.')}</p>
+
+          <label>{t('Your name')}
+            <input autoComplete="given-name" required maxLength={40}
+              value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
 
           <label>{t('Email address')}
             <input type="email" autoComplete="email" required

@@ -22,6 +22,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { categoryLabel, DOC_TYPE_LABELS } from '../i18n/labels.js'
 import { k } from '../i18n/strings.js'
 import { centsToRupees, money, rupeesToCents } from '../utils/money.js'
+import { toWav } from '../utils/wav.js'
 
 // --- Config ---
 const LOW_CONFIDENCE = 0.7 // same threshold as the n8n Guardrail
@@ -225,10 +226,18 @@ export default function InputDataPage() {
     recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data) }
     recorder.onstop = async () => {
       stream.getTracks().forEach((track) => track.stop())
-      const audio = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
-      if (!audio.size) {
+      const recorded = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
+      if (!recorded.size) {
         setError(k('Nothing was recorded. Try again.'))
         return
+      }
+      // Gemini reads WAV reliably; if this browser cannot convert, send the original recording.
+      let audio = recorded
+      setBusy('reading')
+      try {
+        audio = await toWav(recorded)
+      } catch (err) {
+        console.warn('WAV conversion failed, sending the original recording:', err)
       }
       await requestPreview({
         inputType: 'voiceNote',

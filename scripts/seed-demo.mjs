@@ -1,11 +1,14 @@
 // Seeds the demo user's profile, transactions and goals into MongoDB for the demo video.
 //
-//   npm run seed:demo              -> writes to MongoDB (replaces the demo user's data)
-//   npm run seed:demo -- --export  -> writes seed-data/*.json to import by hand (Compass or Atlas)
+//   npm run seed:demo                    -> writes to MongoDB (replaces the demo user's data)
+//   npm run seed:demo -- --export        -> writes seed-data/*.json to import by hand (Compass or Atlas)
+//   npm run seed:demo -- --with-expenses -> also saves a monthly expense list (see demo/README.md first:
+//                                           it changes what the demo video's scene 8 shows)
 //
 // Settings come from .env.local (or the environment):
 //   VITE_FIREBASE_API_KEY  already there for the app
 //   DEMO_EMAIL             default test@goalpath.com
+//   DEMO_NAME              default Yash; saved as the account's display name for the greeting
 //   DEMO_PASSWORD          the demo account's password (never commit it)
 //   MONGODB_URI            same connection string as the n8n MongoDB credential (not needed for --export)
 //   MONGODB_DB             same database name as the n8n MongoDB credential (not needed for --export)
@@ -23,7 +26,9 @@ function loadEnvFile(path) {
 }
 const env = { ...loadEnvFile('.env.local'), ...process.env }
 const EXPORT_ONLY = process.argv.includes('--export')
+const WITH_EXPENSES = process.argv.includes('--with-expenses')
 const EMAIL = env.DEMO_EMAIL || 'test@goalpath.com'
+const NAME = env.DEMO_NAME || 'Yash'
 const required = ['VITE_FIREBASE_API_KEY', 'DEMO_PASSWORD', ...(EXPORT_ONLY ? [] : ['MONGODB_URI', 'MONGODB_DB'])]
 const missing = required.filter((key) => !env[key])
 if (missing.length) {
@@ -34,6 +39,7 @@ if (missing.length) {
 // --- Demo story (amounts in rupees; stored as integer cents) ---
 const SALARY = 45000
 const STARTING_SAVINGS = 60000 // money in the bank before the first seeded month
+const MONTHS_OF_HISTORY = 6 // full past months, plus the current month up to yesterday
 const MONTHLY_BILLS = [ // [day of month, name, vendor, category, rupees]
   [1, 'Rent', 'Landlord', 'rent', 12000],
   [2, 'Bus pass', 'NTA', 'transport', 1200],
@@ -43,6 +49,21 @@ const MONTHLY_BILLS = [ // [day of month, name, vendor, category, rupees]
   [12, 'Fibre internet', 'my.t', 'telecom', 1499],
   [15, 'Dinner out', 'Chez Popo', 'dining', 1100],
   [20, 'Groceries', 'Super U', 'groceries', 2900],
+]
+const ONE_OFF_SPENDS = [ // [months ago, day, name, vendor, category, rupees]: once only, so never routine
+  [5, 18, 'Shoes', 'Bata', 'clothing', 2450],
+  [4, 27, 'Cinema', 'MCine', 'entertainment', 600],
+  [3, 8, 'Pharmacy', 'Pharmacie Nouvelle', 'health', 780],
+  [2, 22, 'Festival gifts', 'Phoenix Les Halles', 'festival', 1350],
+  [1, 14, 'Birthday gift', 'Bagatelle Mall', 'gifts', 900],
+]
+const MONTHLY_EXPENSE_LIST = [ // [name, group, rupees]: matches the monthly bills above (--with-expenses)
+  ['Rent', 'essential', 12000],
+  ['Groceries', 'essential', 6100],
+  ['Bus pass', 'essential', 1200],
+  ['Electricity and water', 'essential', 2000],
+  ['Fibre internet', 'essential', 1499],
+  ['Dinner out', 'adjustable', 1100],
 ]
 const GOALS = [ // [name, type, target rupees, saved rupees]
   ['University laptop', 'product', 40000, 15000],
@@ -60,7 +81,7 @@ function monthStart(offset) {
 }
 const isoDate = ({ year, month }, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-// --- Firebase: sign in to get the demo user's ID ---
+// --- Firebase: sign in to get the demo user's ID, then set the name used in the greeting ---
 async function signIn() {
   const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.VITE_FIREBASE_API_KEY}`, {
     method: 'POST',
@@ -69,7 +90,17 @@ async function signIn() {
   })
   const body = await response.json()
   if (!response.ok) throw new Error(`Firebase sign-in failed for ${EMAIL}: ${body.error?.message || response.status}`)
-  return body.localId
+  return { userId: body.localId, idToken: body.idToken }
+}
+
+async function setDisplayName(idToken) {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${env.VITE_FIREBASE_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken, displayName: NAME, returnSecureToken: false }),
+  })
+  const body = await response.json()
+  if (!response.ok) throw new Error(`Could not set the display name: ${body.error?.message || response.status}`)
 }
 
 // --- Run a Code node from our own n8n workflows, so the numbers match the app exactly ---
@@ -87,12 +118,15 @@ const readApi = workflowNode('MoBudget_Read_API.json', 'Shape Read Response')
 // --- Build the data ---
 function buildTransactions(userId) {
   const rows = []
-  for (const offset of [-3, -2, -1, 0]) {
+  for (let offset = -MONTHS_OF_HISTORY; offset <= 0; offset++) {
     const month = monthStart(offset)
     for (const [day, name, vendor, category, rupees] of MONTHLY_BILLS) {
       rows.push({ txnDate: isoDate(month, day), name, vendor, category, amount: cents(rupees), direction: 'expense', source: 'manual', docType: 'purchase' })
     }
     if (offset < 0) rows.push({ txnDate: isoDate(month, 25), name: 'Net salary', vendor: 'Lagon Bleu Ltd', category: 'salary', amount: cents(SALARY), direction: 'income', source: 'document', docType: 'payslip' })
+  }
+  for (const [monthsAgo, day, name, vendor, category, rupees] of ONE_OFF_SPENDS) {
+    rows.push({ txnDate: isoDate(monthStart(-monthsAgo), day), name, vendor, category, amount: cents(rupees), direction: 'expense', source: 'manual', docType: 'receipt' })
   }
   // Only the past: the demo adds today's entries on camera.
   const past = rows.filter((row) => row.txnDate < today).sort((a, b) => a.txnDate.localeCompare(b.txnDate))
@@ -115,8 +149,9 @@ async function buildData(userId) {
   const transactions = buildTransactions(userId)
   const profile = {
     userId, email: EMAIL, salary: cents(SALARY),
-    manualBalance: cents(STARTING_SAVINGS), manualBalanceDate: isoDate(monthStart(-4), 28),
+    manualBalance: cents(STARTING_SAVINGS), manualBalanceDate: isoDate(monthStart(-MONTHS_OF_HISTORY - 1), 28),
     bufferWeeks: 4, updatedAt: stamp,
+    ...(WITH_EXPENSES ? { monthlyExpenses: MONTHLY_EXPENSE_LIST.map(([name, group, rupees]) => ({ name, amountCents: cents(rupees), group })) } : {}),
   }
   const goals = []
   for (const [itemName, goalType, target, saved] of GOALS) {
@@ -161,7 +196,8 @@ function exportJson({ profile, transactions, goals }) {
 }
 
 // --- Main ---
-const userId = await signIn()
+const { userId, idToken } = await signIn()
+await setDisplayName(idToken)
 const data = await buildData(userId)
 if (EXPORT_ONLY) exportJson(data)
 else await writeToMongo(data)
@@ -169,9 +205,9 @@ else await writeToMongo(data)
 const bundle = { userId, profile: [data.profile], transactions: data.transactions, goals: data.goals }
 const dashboard = (await readApi({ ...bundle, request: { inputType: 'getDashboard' } })).data
 const rs = (c) => `Rs ${Math.round(c / 100).toLocaleString('en-US')}`
-console.log(`\nDemo user ${EMAIL} (Firebase ID ${userId}), as of ${today}:`)
+console.log(`\nDemo user ${EMAIL} (Firebase ID ${userId}, name "${NAME}"), as of ${today}:`)
 console.log(`  Monthly salary:   ${rs(dashboard.salaryCents)}`)
-console.log(`  Monthly expenses: ${rs(dashboard.monthlyRoutineCents)} (estimated from repeat spending)`)
+console.log(`  Monthly expenses: ${rs(dashboard.monthlyRoutineCents)} (${dashboard.spendingSource === 'declared' ? 'from the expense list' : 'estimated from repeat spending'})`)
 console.log(`  Active goals:     ${dashboard.activeGoals}`)
 console.log(`  Transactions:     ${data.transactions.length}, from ${data.transactions[0]?.txnDate} to ${data.transactions.at(-1)?.txnDate}`)
 for (const g of data.goals) console.log(`  Goal: ${g.itemName}, ${rs(g.targetAmount)}, ${rs(g.savedAmount)} saved -> ${g.verdict}${g.timelineMonths ? `, about ${g.timelineMonths} month(s)` : ''}`)

@@ -44,7 +44,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.4,
       "position": [
-        544,
+        984,
         -992
       ],
       "retryOnFail": true,
@@ -63,7 +63,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        544,
+        984,
         -784
       ],
       "credentials": {
@@ -82,7 +82,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1,
       "position": [
-        720,
+        1160,
         -784
       ]
     },
@@ -95,48 +95,9 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1,
       "position": [
-        1040,
+        1480,
         -160
       ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://aiconsole-api.myt.mu/v1/audio/transcriptions",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "contentType": "multipart-form-data",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "model",
-              "value": "myt ASR"
-            },
-            {
-              "parameterType": "formBinaryData",
-              "name": "file",
-              "inputDataFieldName": "data"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "b9391234-22d7-4275-bf23-cc71b6603f03",
-      "name": "myt_asr",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        544,
-        576
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "DYB9xdQ256LxD5EF",
-          "name": "Header Auth account"
-        }
-      },
-      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -156,7 +117,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.4,
       "position": [
-        752,
+        1192,
         576
       ],
       "onError": "continueErrorOutput"
@@ -170,7 +131,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1,
       "position": [
-        880,
+        1320,
         816
       ]
     },
@@ -183,7 +144,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1920,
+        2360,
         -432
       ]
     },
@@ -196,7 +157,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2592,
+        3032,
         -176
       ]
     },
@@ -209,7 +170,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2208,
+        2648,
         368
       ]
     },
@@ -222,7 +183,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2416,
+        2856,
         368
       ]
     },
@@ -237,7 +198,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.1,
       "position": [
-        2864,
+        3304,
         752
       ],
       "credentials": {
@@ -256,7 +217,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3056,
+        3496,
         752
       ]
     },
@@ -272,7 +233,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.1,
       "position": [
-        3040,
+        3480,
         -176
       ],
       "credentials": {
@@ -284,23 +245,6 @@
     },
     {
       "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "fileData",
-        "options": {
-          "mimeType": "={{ $json.mimeType || 'audio/webm' }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        320,
-        576
-      ],
-      "id": "bce14098-8fdb-4853-b5d0-fc935e1d2dde",
-      "name": "Audio To File"
-    },
-    {
-      "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
         "options": {}
@@ -308,7 +252,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1104,
+        1544,
         576
       ],
       "id": "1c61cab2-03a7-4e74-bcc9-93e086c97b14",
@@ -321,7 +265,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1328,
+        1768,
         576
       ],
       "id": "a84ec731-f1b1-4f96-b5da-b8737fe19c6f",
@@ -334,7 +278,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2368,
+        2808,
         -544
       ],
       "id": "a773df28-6eeb-4311-a4e4-95514d2bfd20",
@@ -619,7 +563,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        96,
+        536,
         -80
       ]
     },
@@ -630,7 +574,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2816,
+        3256,
         16
       ],
       "id": "b9044f9e-a8de-49f7-8cb5-f03853d16638",
@@ -649,7 +593,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        3040,
+        3480,
         16
       ],
       "id": "c1c49a42-f1fa-4367-8e50-ea1ae0e685f0",
@@ -668,7 +612,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2144,
+        2584,
         160
       ],
       "id": "e8556947-8177-49c0-b478-55196c4c97d4",
@@ -677,12 +621,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// --- Auth Bouncer (Code node) ---\n// Runs after \"Verify Firebase Token\", which asked Google to check the ID token.\n// Any userId or email sent by the client is dropped and replaced.\n// Mode: Run Once for All Items.\nconst IDENTITY_FIELDS = ['userId', 'email']\n\nconst users = $input.first().json.users || []\nif (!users.length) throw new Error('UNAUTHORIZED: no Firebase user for this token')\nconst verifiedUser = users[0]\n\n// --- Output: the request body plus the verified identity ---\nconst requestBody = $('Webhook').first().json.body || {}\nconst safeBody = Object.fromEntries(\n  Object.entries(requestBody).filter(([key]) => !IDENTITY_FIELDS.includes(key)),\n)\nreturn [{ json: { ...safeBody, userId: verifiedUser.localId, email: verifiedUser.email ?? null } }]\n"
+        "jsCode": "// --- Auth Bouncer (Code node) ---\n// Runs after \"Verify Firebase Token\" (Google checked the ID token) or straight from\n// \"Token Cached?\" when the same token was checked in the last hour.\n// Any userId or email sent by the client is dropped and replaced.\n// Mode: Run Once for All Items.\nconst IDENTITY_FIELDS = ['userId', 'email']\n\nconst users = $input.first().json.users || []\nif (!users.length) throw new Error('UNAUTHORIZED: no Firebase user for this token')\nconst verifiedUser = users[0]\n\n// --- Remember a fresh Google check, so the next request skips it (see \"Token Cache\") ---\n// Kept until the token expires, and never longer than an hour.\nif ($input.first().json.cacheHit !== 'yes') {\n  const tokenKey = $('Token Cache').first().json.tokenKey\n  const headers = $('Webhook').first().json.headers || {}\n  const token = String(headers.authorization || '').replace(/^Bearer\\s+/i, '').trim()\n  const now = Math.floor(Date.now() / 1000)\n  let tokenExp = now\n  try {\n    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')\n    tokenExp = Number(JSON.parse(Buffer.from(payload, 'base64').toString('utf8')).exp) || now\n  } catch { /* unreadable token: do not cache it */ }\n  const store = $getWorkflowStaticData('global')\n  const cache = store.verifiedTokens || {}\n  for (const [key, entry] of Object.entries(cache)) if (entry.exp <= now) delete cache[key]\n  if (tokenKey && tokenExp > now) cache[tokenKey] = { uid: verifiedUser.localId, email: verifiedUser.email ?? null, exp: Math.min(tokenExp, now + 3600) }\n  store.verifiedTokens = cache\n}\n\n// --- Output: the request body plus the verified identity ---\nconst requestBody = $('Webhook').first().json.body || {}\nconst safeBody = Object.fromEntries(\n  Object.entries(requestBody).filter(([key]) => !IDENTITY_FIELDS.includes(key)),\n)\nreturn [{ json: { ...safeBody, userId: verifiedUser.localId, email: verifiedUser.email ?? null } }]\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -128,
+        312,
         160
       ],
       "id": "ef88f76d-1dcd-4448-9eba-4f2d0d2a38e4",
@@ -700,7 +644,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        48,
+        488,
         336
       ],
       "id": "6cde4184-171b-4aab-9d6f-32c4a096c353",
@@ -717,7 +661,7 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        320,
+        760,
         -992
       ],
       "id": "62417926-f3a7-4b0e-86e5-a5e2a2662fd9",
@@ -732,7 +676,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        960,
+        1400,
         -864
       ],
       "id": "e0d49ec1-9fc1-4acf-bf75-d8bf5d2d30d4",
@@ -749,7 +693,7 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        320,
+        760,
         -384
       ],
       "id": "4a5343bd-ce21-4802-bf7e-03a271972e76",
@@ -763,7 +707,7 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        608,
+        1048,
         -384
       ],
       "id": "181c5407-7945-4aa2-9f7c-56e487cff3ad",
@@ -779,7 +723,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        912,
+        1352,
         -160
       ],
       "id": "89146df7-0e5d-455d-95cf-58704f374a37",
@@ -809,7 +753,7 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.4,
       "position": [
-        896,
+        1336,
         -384
       ],
       "onError": "continueErrorOutput"
@@ -823,7 +767,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1312,
+        1752,
         -320
       ],
       "id": "bbf20866-8b25-469a-abc1-39673a017bab",
@@ -842,7 +786,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1232,
+        1672,
         -976
       ]
     },
@@ -855,7 +799,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        2368,
+        2808,
         -176
       ],
       "id": "9111e887-53c3-40c9-a2a7-a05129fd180f",
@@ -876,7 +820,7 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        2816,
+        3256,
         -176
       ],
       "id": "c25a2167-4bbc-4f21-9734-b7c03cf9a9af",
@@ -891,7 +835,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        2032,
+        2472,
         368
       ],
       "id": "7f09864d-2676-4bbe-8a1e-b8a59a019cd9",
@@ -942,7 +886,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2624,
+        3064,
         368
       ]
     },
@@ -953,7 +897,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2864,
+        3304,
         576
       ],
       "id": "ce3ae7cb-c977-443f-a21b-f964c1a6f14a",
@@ -971,7 +915,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        3040,
+        3480,
         576
       ],
       "id": "6e3d8faf-9313-4448-9cb8-04f25c7ef2ef",
@@ -990,7 +934,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3264,
+        3704,
         96
       ],
       "id": "0c47ee71-b74d-43b5-85df-83d2f7e10830",
@@ -1003,7 +947,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        3488,
+        3928,
         96
       ],
       "id": "856ecfc8-1820-4d0d-911f-10c6e1330175",
@@ -1019,7 +963,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        768,
+        1208,
         752
       ],
       "id": "0f3e27f5-efe3-4de6-9786-e62240cc3be3",
@@ -1069,7 +1013,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2368,
+        2808,
         16
       ]
     },
@@ -1080,7 +1024,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2592,
+        3032,
         16
       ],
       "id": "6c7db33c-c92a-4909-957e-b8064345ed4e",
@@ -1098,7 +1042,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        2816,
+        3256,
         -80
       ],
       "id": "cc58631a-a1a1-400b-af81-ed0569e9ee0c",
@@ -1117,7 +1061,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1808,
+        2248,
         368
       ],
       "id": "fe7de410-f326-490a-ad37-2844b4f8dd84",
@@ -1137,7 +1081,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        320,
+        760,
         800
       ]
     },
@@ -1154,7 +1098,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2368,
+        2808,
         800
       ]
     },
@@ -1165,7 +1109,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2592,
+        3032,
         1000
       ],
       "id": "d8b6d0fb-b3ec-4751-8db9-c837b8797bce",
@@ -1179,7 +1123,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2592,
+        3032,
         1180
       ],
       "id": "055cbaf1-311b-4a1c-98b7-a33d9f26d6aa",
@@ -1198,7 +1142,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        2816,
+        3256,
         1000
       ],
       "id": "fda37ecd-f61f-4048-b41d-40790258e57a",
@@ -1222,7 +1166,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        2816,
+        3256,
         1180
       ],
       "id": "433a8628-b6ee-498a-9fa9-91659a107020",
@@ -1240,7 +1184,7 @@
         "url": "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyClep1OeRQHb18zuwGblC8ld6Eak5_wnso",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ idToken: String(($json.headers || {}).authorization || '').replace(/^Bearer\\s+/i, '').trim() }) }}",
+        "jsonBody": "={{ JSON.stringify({ idToken: String(($('Webhook').first().json.headers || {}).authorization || '').replace(/^Bearer\\s+/i, '').trim() }) }}",
         "options": {
           "timeout": 10000
         }
@@ -1250,8 +1194,97 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -128,
+        312,
         -20
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- Token Cache (Code node) ---\n// Runs first. If Google already verified this exact ID token in the last hour,\n// skip the call to Google (\"Verify Firebase Token\") and reuse the verified user.\n// Tokens are stored only as SHA-256 hashes, in this workflow's static data.\n// Mode: Run Once for All Items.\n\n// SHA-256 of an ASCII string, in plain JavaScript (Code nodes cannot load 'crypto' by default).\nfunction sha256(text) {\n  const K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]\n  const hash = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]\n  const bytes = Array.from(unescape(encodeURIComponent(text)), (char) => char.charCodeAt(0))\n  const bitLength = bytes.length * 8\n  bytes.push(0x80)\n  while (bytes.length % 64 !== 56) bytes.push(0)\n  for (let shift = 56; shift >= 0; shift -= 8) bytes.push(shift >= 32 ? Math.floor(bitLength / 2 ** shift) & 0xff : (bitLength >>> shift) & 0xff)\n  const rotate = (value, count) => (value >>> count) | (value << (32 - count))\n  const words = new Array(64)\n  for (let offset = 0; offset < bytes.length; offset += 64) {\n    for (let i = 0; i < 16; i++) words[i] = (bytes[offset + i * 4] << 24) | (bytes[offset + i * 4 + 1] << 16) | (bytes[offset + i * 4 + 2] << 8) | bytes[offset + i * 4 + 3]\n    for (let i = 16; i < 64; i++) {\n      const s0 = rotate(words[i - 15], 7) ^ rotate(words[i - 15], 18) ^ (words[i - 15] >>> 3)\n      const s1 = rotate(words[i - 2], 17) ^ rotate(words[i - 2], 19) ^ (words[i - 2] >>> 10)\n      words[i] = (words[i - 16] + s0 + words[i - 7] + s1) | 0\n    }\n    let [a, b, c, d, e, f, g, h] = hash\n    for (let i = 0; i < 64; i++) {\n      const t1 = (h + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + words[i]) | 0\n      const t2 = ((rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0\n      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0\n    }\n    hash[0] = (hash[0] + a) | 0; hash[1] = (hash[1] + b) | 0; hash[2] = (hash[2] + c) | 0; hash[3] = (hash[3] + d) | 0\n    hash[4] = (hash[4] + e) | 0; hash[5] = (hash[5] + f) | 0; hash[6] = (hash[6] + g) | 0; hash[7] = (hash[7] + h) | 0\n  }\n  return hash.map((word) => (word >>> 0).toString(16).padStart(8, '0')).join('')\n}\n\n// --- Input: the bearer token ---\nconst headers = $('Webhook').first().json.headers || {}\nconst token = String(headers.authorization || '').replace(/^Bearer\\s+/i, '').trim()\nconst tokenKey = token ? sha256(token) : ''\n\n// --- Look it up ---\nconst store = $getWorkflowStaticData('global')\nconst hit = tokenKey && store.verifiedTokens ? store.verifiedTokens[tokenKey] : null\nif (hit && hit.exp > Math.floor(Date.now() / 1000)) {\n  return [{ json: { cacheHit: 'yes', users: [{ localId: hit.uid, email: hit.email }] } }]\n}\nreturn [{ json: { cacheHit: 'no', tokenKey } }]\n"
+      },
+      "id": "5920bd3d-8606-4a6e-8247-5e39d78d6a4e",
+      "name": "Token Cache",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -132,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-token-cached",
+              "leftValue": "={{ $json.cacheHit }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aba0b2e1-d891-48ec-8281-04b4e44bab2d",
+      "name": "Token Cached?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        88,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Transcribe this voice note, then translate it into English. The speaker may mix Kreol Morisien, French and English in the same sentence. Keep every amount, number, shop name and person name exactly as said, and write amounts in digits (for example Rs 40000). Return only the English text, with no notes or quotes.' }, { inline_data: { mime_type: $json.mimeType || 'audio/wav', data: $json.fileData } }] }], generationConfig: { temperature: 0, thinkingConfig: { thinkingBudget: 0 } } }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "f2c747c8-a69a-4c4f-9929-ca209c651ef4",
+      "name": "Gemini Transcribe & Translate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        576
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iv1A4z5pHK5ZZsWj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- Transcript Text (Code node, after \"Gemini Transcribe & Translate\") ---\n// Pulls the English transcript out of Gemini's reply into \"text\", which \"Gemini Voice Parse\" reads.\n// An empty transcript (silence, noise) goes to the error output, so the app gets EXTRACTION_FAILED.\n// Mode: Run Once for All Items.\nconst reply = $input.first().json\nconst parts = reply.candidates?.[0]?.content?.parts || []\nconst text = parts.map((part) => part.text || '').join(' ').trim()\nif (!text) throw new Error('EXTRACTION_FAILED: Gemini returned no transcript')\nreturn [{ json: { text } }]\n"
+      },
+      "id": "92782e22-ceb3-4a60-9cee-7c1faede63d8",
+      "name": "Transcript Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        984,
+        576
       ],
       "onError": "continueErrorOutput"
     }
@@ -1262,7 +1295,7 @@
       "main": [
         [
           {
-            "node": "Verify Firebase Token",
+            "node": "Token Cache",
             "type": "main",
             "index": 0
           }
@@ -1286,24 +1319,6 @@
           {
             "node": "Document Extract",
             "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "myt_asr": {
-      "main": [
-        [
-          {
-            "node": "Gemini Voice Parse",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond Extraction Failed",
-            "type": "main",
             "index": 0
           }
         ]
@@ -1734,7 +1749,7 @@
         ],
         [
           {
-            "node": "Audio To File",
+            "node": "Gemini Transcribe & Translate",
             "type": "main",
             "index": 0
           },
@@ -1871,17 +1886,6 @@
         ]
       ]
     },
-    "Audio To File": {
-      "main": [
-        [
-          {
-            "node": "myt_asr",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Salary Edit Prep": {
       "main": [
         [
@@ -1952,6 +1956,71 @@
         [
           {
             "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Cache": {
+      "main": [
+        [
+          {
+            "node": "Token Cached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Cached?": {
+      "main": [
+        [
+          {
+            "node": "Auth Bouncer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verify Firebase Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Transcribe & Translate": {
+      "main": [
+        [
+          {
+            "node": "Transcript Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Extraction Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcript Text": {
+      "main": [
+        [
+          {
+            "node": "Gemini Voice Parse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Extraction Failed",
             "type": "main",
             "index": 0
           }

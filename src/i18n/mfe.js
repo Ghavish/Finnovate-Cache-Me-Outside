@@ -305,4 +305,13 @@ export default {
   "Thinking…": "Mo pe reflesi…",
   "The coach could not answer right now. Try again.": "Coach-la pa kapav reponn aster. Esey ankor.",
   "You asked": "To'nn demande",
+  // Theme toggle and name
+  "Your name": "To nom",
+  "Enter your name.": "Antre to nom.",
+  "Could not save your name. Try again.": "Pa finn kapav anrezistre to nom. Esey ankor.",
+  "Profile": "Profil",
+  "MoBudget uses it to greet you.": "MoBudget servi li pou dir twa bonzour.",
+  "Switch to light mode": "Pas lor mod kler",
+  "Switch to dark mode": "Pas lor mod nwar",
+  "Add your name": "Azout to nom",
 }

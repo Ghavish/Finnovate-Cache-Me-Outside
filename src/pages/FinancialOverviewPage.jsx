@@ -1,7 +1,9 @@
 import { ArrowDownLeft, ArrowUpRight, ChevronDown, LoaderCircle, Pencil, Plus, RotateCw, Trash2, X } from 'lucide-react'
+import { AnimatePresence, m } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { callN8n, readN8n } from '../firebase/apiClient.js'
+import CountUp from '../components/ui/CountUp.jsx'
+import { callN8n, peekRead, readN8n } from '../firebase/apiClient.js'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { categoryLabel, EXPENSE_GROUP_LABELS } from '../i18n/labels.js'
 import { k } from '../i18n/strings.js'
@@ -13,6 +15,8 @@ const GROUPS = [
   { id: 'optional', label: EXPENSE_GROUP_LABELS.optional, hint: k('Entertainment, subscriptions, gifts') },
 ]
 const TRANSACTION_LIMIT = 20
+const DASHBOARD = { inputType: 'getDashboard' }
+const TRANSACTIONS = { inputType: 'listTransactions', limit: TRANSACTION_LIMIT }
 
 
 // --- Monthly salary: the only editable stat card ---
@@ -43,7 +47,7 @@ function SalaryCard({ salaryCents, onSaved }) {
       <div className="edit-input"><b>Rs</b><input type="number" min="0" step="0.01" inputMode="decimal" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label={t('Monthly salary in rupees')} autoFocus /></div>
       {error && <p className="form-error">{t(error)}</p>}
       <div className="fo-edit-actions"><button type="button" className="small-primary" onClick={save} disabled={saving}>{saving ? t('Saving…') : t('Save')}</button><button type="button" className="text-button" onClick={() => { setEditing(false); setError('') }}>{t('Cancel')}</button></div>
-    </> : <div className="fo-value-row"><strong>{moneyFromCents(salaryCents)}</strong><button type="button" className="text-button" onClick={() => { setDraft(String(centsToRupees(salaryCents))); setEditing(true) }}>{t('Edit')}</button></div>}
+    </> : <div className="fo-value-row"><strong><CountUp value={salaryCents || 0} format={moneyFromCents} /></strong><button type="button" className="text-button" onClick={() => { setDraft(String(centsToRupees(salaryCents))); setEditing(true) }}>{t('Edit')}</button></div>}
   </article>
 }
 
@@ -56,9 +60,13 @@ function ExpenseGroup({ group, items, open, onToggle }) {
       <span>{t(group.label)}<small>{items.length === 1 ? t('{count} expense', { count: 1 }) : t('{count} expenses', { count: items.length })}</small></span>
       <strong>{moneyFromCents(total)}<ChevronDown size={18} /></strong>
     </button>
-    {open && (items.length ? <ul className="expense-items">
-      {items.map((item, index) => <li key={`${item.name}-${index}`}><span>{item.name}</span><b>{moneyFromCents(item.amountCents)}</b></li>)}
-    </ul> : <p className="expense-empty">{t('Nothing added to {group} yet.', { group: t(group.label) })}</p>)}
+    <AnimatePresence initial={false}>
+      {open && <m.div key="items" className="expense-reveal" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ type: 'spring', visualDuration: 0.3, bounce: 0 }}>
+        {items.length ? <ul className="expense-items">
+          {items.map((item, index) => <li key={`${item.name}-${index}`}><span>{item.name}</span><b>{moneyFromCents(item.amountCents)}</b></li>)}
+        </ul> : <p className="expense-empty">{t('Nothing added to {group} yet.', { group: t(group.label) })}</p>}
+      </m.div>}
+    </AnimatePresence>
   </div>
 }
 
@@ -123,15 +131,15 @@ function ExpensesEditor({ expenses, onClose, onSaved }) {
 
 export default function FinancialOverviewPage() {
   const { t, formatDate } = useLanguage()
-  const [overview, setOverview] = useState(null)
-  const [transactions, setTransactions] = useState(null)
+  const [overview, setOverview] = useState(() => peekRead(DASHBOARD) ?? null)
+  const [transactions, setTransactions] = useState(() => peekRead(TRANSACTIONS)?.transactions ?? null)
   const [error, setError] = useState('')
   const [openGroup, setOpenGroup] = useState(null)
   const [editingExpenses, setEditingExpenses] = useState(false)
 
   const load = useCallback(() => Promise.all([
-    readN8n({ inputType: 'getDashboard' }),
-    readN8n({ inputType: 'listTransactions', limit: TRANSACTION_LIMIT }),
+    readN8n(DASHBOARD),
+    readN8n(TRANSACTIONS),
   ]).then(([dashboard, list]) => {
     setOverview(dashboard); setTransactions(list.transactions); setError('')
   }).catch((err) => {
@@ -150,8 +158,8 @@ export default function FinancialOverviewPage() {
 
     <section className="fo-stat-row">
       {overview ? <SalaryCard salaryCents={overview.salaryCents} onSaved={load} /> : <article className="fo-stat-card blue"><small>{t('Monthly salary')}</small><strong>{value(() => '')}</strong></article>}
-      <article className="fo-stat-card amber"><small>{t('Monthly expenses')}</small><strong>{value((d) => moneyFromCents(d.monthlyRoutineCents))}</strong><span className="fo-note">{overview?.spendingSource === 'declared' ? t('Total of your expense summary') : t('Estimated from repeat spending until you add your expenses')}</span></article>
-      <article className="fo-stat-card safe"><small>{t('Safe saving capacity')}</small><strong>{value((d) => moneyFromCents(d.safeSavingCapacityCents))}</strong><span className="fo-note">{t('Salary minus monthly expenses')}</span></article>
+      <article className="fo-stat-card amber"><small>{t('Monthly expenses')}</small><strong>{value((d) => <CountUp value={d.monthlyRoutineCents || 0} format={moneyFromCents} />)}</strong><span className="fo-note">{overview?.spendingSource === 'declared' ? t('Total of your expense summary') : t('Estimated from repeat spending until you add your expenses')}</span></article>
+      <article className="fo-stat-card safe"><small>{t('Safe saving capacity')}</small><strong>{value((d) => <CountUp value={d.safeSavingCapacityCents || 0} format={moneyFromCents} />)}</strong><span className="fo-note">{t('Salary minus monthly expenses')}</span></article>
     </section>
 
     <section className="fo-card-row">
@@ -171,7 +179,7 @@ export default function FinancialOverviewPage() {
         {transactions?.length > 0 && <ul className="transaction-list">
           {transactions.map((tx) => <li key={tx.id}>
             <span>{formatDate(tx.txnDate)}</span>
-            <span className="tx-label">{tx.direction === 'income' ? <ArrowDownLeft size={16} className="income" /> : <ArrowUpRight size={16} />}<span><b>{tx.name || t(categoryLabel(tx.category))}</b><small>{[tx.vendor, t(categoryLabel(tx.category))].filter(Boolean).join(' · ')}</small></span></span>
+            <span className="tx-label"><i className={`tx-chip ${tx.direction}`} aria-hidden="true">{tx.direction === 'income' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</i><span><b>{tx.name || t(categoryLabel(tx.category))}</b><small>{[tx.vendor, t(categoryLabel(tx.category))].filter(Boolean).join(' · ')}</small></span></span>
             <strong className={tx.direction}>{tx.direction === 'income' ? '+ ' : '- '}{moneyFromCents(tx.amountCents)}</strong>
           </li>)}
         </ul>}

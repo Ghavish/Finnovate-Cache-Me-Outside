@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "./config";
 import { k } from "../i18n/strings.js";
@@ -17,6 +18,12 @@ export function logIn(email, password) {
  
 export function logOut() {
   return signOut(auth);
+}
+
+// Saves the name shown in the greeting and the header (Firebase displayName).
+export function updateName(name) {
+  if (!auth.currentUser) throw new Error("Not logged in");
+  return updateProfile(auth.currentUser, { displayName: name.trim() });
 }
  
 // Attach this token to every n8n call

@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { logIn, authMessage } from '../firebase/authService.js' // 1. Added Firebase imports
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import LanguagePicker from '../components/layout/LanguagePicker.jsx'
+import Logo from '../components/layout/Logo.jsx'
+import ThemeToggle from '../components/layout/ThemeToggle.jsx'
 
 export default function LoginPage() {
   const { user } = useAuth() // 2. Removed 'login' from context extraction
@@ -37,7 +39,8 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-panel login-brand-panel">
-        <div className="login-logo">Mo<span>Budget</span></div>
+        <div className="aurora" aria-hidden="true" />
+        <div className="login-logo"><Logo size={36} /></div>
         <div>
           <div className="login-icon"><Target size={30} /></div>
           <h1>{t('Plan your goals.')}<br />{t('Understand your money.')}</h1>
@@ -47,7 +50,7 @@ export default function LoginPage() {
       </section>
       
       <section className="login-panel login-form-panel">
-        <LanguagePicker className="auth-language" />
+        <div className="auth-language"><LanguagePicker /><ThemeToggle /></div>
         <form onSubmit={submit}>
           <span className="eyebrow">{t('WELCOME BACK')}</span>
           <h2>{t('Log in to MoBudget')}</h2>

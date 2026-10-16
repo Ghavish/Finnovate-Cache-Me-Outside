@@ -305,4 +305,13 @@ export default {
   "Thinking…": "Réflexion…",
   "The coach could not answer right now. Try again.": "Le coach ne peut pas répondre pour le moment. Réessayez.",
   "You asked": "Votre question",
+  // Theme toggle and name
+  "Your name": "Votre nom",
+  "Enter your name.": "Saisissez votre nom.",
+  "Could not save your name. Try again.": "Impossible d'enregistrer votre nom. Réessayez.",
+  "Profile": "Profil",
+  "MoBudget uses it to greet you.": "MoBudget l'utilise pour vous saluer.",
+  "Switch to light mode": "Passer en mode clair",
+  "Switch to dark mode": "Passer en mode sombre",
+  "Add your name": "Ajoutez votre nom",
 }

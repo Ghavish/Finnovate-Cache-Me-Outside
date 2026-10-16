@@ -1,42 +1,45 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
 import AppLayout from './components/layout/AppLayout.jsx'
+import PageLoader from './components/ui/PageLoader.jsx'
 
-// Pages
-import AICoachPage from './pages/AICoachPage.jsx'
-import DashboardPage from './pages/DashboardPage.jsx'
-import FinancialOverviewPage from './pages/FinancialOverviewPage.jsx'
-import GoalsPage from './pages/GoalsPage.jsx'
-import InputDataPage from './pages/InputDataPage.jsx'
-import LoginPage from './pages/LoginPage.jsx'
-import SignupPage from './components/auth/Signup.jsx' 
-import NotFoundPage from './pages/NotFoundPage.jsx'
-import AnalysisResultPage from './pages/AnalysisResultPage.jsx'
+// Pages: each one downloads only when it is first opened.
+const AICoachPage = lazy(() => import('./pages/AICoachPage.jsx'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'))
+const FinancialOverviewPage = lazy(() => import('./pages/FinancialOverviewPage.jsx'))
+const GoalsPage = lazy(() => import('./pages/GoalsPage.jsx'))
+const InputDataPage = lazy(() => import('./pages/InputDataPage.jsx'))
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'))
+const SignupPage = lazy(() => import('./components/auth/Signup.jsx'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
+const AnalysisResultPage = lazy(() => import('./pages/AnalysisResultPage.jsx'))
 
 export default function App() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+    <Suspense fallback={<PageLoader fullScreen />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
-      {/* Protected Dashboard Routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/input-data" element={<InputDataPage />} />
-          <Route path="/analysis-result" element={<AnalysisResultPage />} />
-          <Route path="/goals" element={<GoalsPage />} />
-          <Route path="/goals/new" element={<GoalsPage startCreating />} />
-          <Route path="/financial-overview" element={<FinancialOverviewPage />} />
-          <Route path="/coach" element={<AICoachPage />} />
+        {/* Protected Dashboard Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/input-data" element={<InputDataPage />} />
+            <Route path="/analysis-result" element={<AnalysisResultPage />} />
+            <Route path="/goals" element={<GoalsPage />} />
+            <Route path="/goals/new" element={<GoalsPage startCreating />} />
+            <Route path="/financial-overview" element={<FinancialOverviewPage />} />
+            <Route path="/coach" element={<AICoachPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* Fallback Route */}
-
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* Fallback Route */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   )
 }
