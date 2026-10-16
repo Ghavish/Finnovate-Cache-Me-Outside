@@ -39,27 +39,31 @@ MongoDB collections used: `users` (profile, salary and the `monthlyExpenses` lis
 
 ## Hosting n8n for the public app
 
-The deployed app can only reach n8n on a public HTTPS address. A laptop running `npx n8n` is not reachable and adds lag, so host n8n on Railway or Render.
+The deployed app can only reach n8n on a public HTTPS address. The team setup is free: n8n runs on a **Render free web service**, keeps its own data (workflows, credentials, the owner login, the token cache) in a **free Neon Postgres** database, and reads and writes the app's data in **MongoDB Atlas** as before.
 
-**Pick an always-on plan.** Render's free web services sleep after about 15 minutes without traffic, and the first request then waits 30 to 60 seconds. That would bring the slow loading back. Railway, or a paid Render instance, stays awake.
+n8n cannot use MongoDB for its own storage; it supports only SQLite and Postgres. Render's free tier wipes the disk whenever the service restarts or sleeps, so SQLite would lose everything. That is why n8n's own data lives in Neon.
 
-### Steps (Railway or Render)
+### Steps
 
-1. Create a **PostgreSQL** database in the same project. n8n stores workflows, credentials and the token cache there; without it, everything is lost on each restart.
-2. Create a service from the Docker image `docker.n8n.io/n8nio/n8n` (pin the version you tested, for example `docker.n8n.io/n8nio/n8n:2.40.6`).
-3. Set these environment variables:
+1. **Neon:** create a free project. From **Connect**, copy the host (the direct one, without `-pooler`), database, user and password.
+2. **Render:** **New → Web Service → Existing image**, image `n8nio/n8n:2.40.6`, instance type **Free**.
+3. Set these environment variables on the Render service:
 
 | Variable | Value |
 | --- | --- |
-| `N8N_ENCRYPTION_KEY` | A long random string. Keep a copy: credentials can't be decrypted without it. |
-| `WEBHOOK_URL` | The service's public URL, e.g. `https://mobudget-n8n.up.railway.app/` |
-| `N8N_HOST` / `N8N_PROTOCOL` / `N8N_PORT` | The public host name, `https`, and the port the platform gives (Railway and Render set `PORT`; use the same value) |
 | `DB_TYPE` | `postgresdb` |
-| `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER`, `DB_POSTGRESDB_PASSWORD` | From the PostgreSQL service |
+| `DB_POSTGRESDB_HOST` / `_PORT` / `_DATABASE` / `_USER` / `_PASSWORD` | From Neon (port `5432`) |
+| `DB_POSTGRESDB_SSL_ENABLED` | `true` (Neon requires SSL) |
+| `N8N_ENCRYPTION_KEY` | A long random string. Keep a copy: credentials can't be decrypted without it. |
+| `N8N_HOST` | `<your-service>.onrender.com` |
+| `N8N_PROTOCOL` | `https` |
+| `N8N_PORT` and `PORT` | `5678` |
+| `WEBHOOK_URL` | `https://<your-service>.onrender.com/` |
+| `N8N_PROXY_HOPS` | `1` (Render sits in front of n8n) |
 | `GENERIC_TIMEZONE` | `Indian/Mauritius` |
-| `N8N_PAYLOAD_SIZE_MAX` | `16` (the default, in MB; voice notes and photos fit under it) |
 
-4. Open the n8n URL, create the owner account, then import `Main.json`, `MoBudget_Read_API.json` and `MoBudget_AI_Coach.json`.
+4. Deploy, open the Render URL, create the owner account, then paste in `Main.json`, `MoBudget_Read_API.json` and `MoBudget_AI_Coach.json` (open each file, copy all, paste on an empty canvas, save).
 5. Create the MongoDB and Google Gemini (PaLM) API credentials, re-select them on every node that shows a warning, then **Publish** all three workflows.
-6. In the frontend's hosting settings (see the main README), set `VITE_N8N_WEBHOOK_URL` to `https://<your-n8n-host>/webhook/api/v1/process`.
-7. In MongoDB Atlas, allow connections from the n8n host (Network Access). Railway and Render use changing IPs, so this usually means `0.0.0.0/0` with a strong database password.
+6. In MongoDB Atlas **Network Access**, allow `0.0.0.0/0` (Render's free IPs change) and keep a strong database password.
+7. **Keep it awake:** Render's free services sleep after 15 minutes without traffic, and the next request waits 30 to 60 seconds. Add a free job on cron-job.org that opens `https://<your-service>.onrender.com/healthz` every 10 minutes. One always-on service fits in Render's 750 free hours a month.
+8. Set the frontend's `VITE_N8N_WEBHOOK_URL` to `https://<your-service>.onrender.com/webhook/api/v1/process` and redeploy it.
