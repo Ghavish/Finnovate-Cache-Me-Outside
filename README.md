@@ -19,6 +19,7 @@ React + Vite frontend for MoBudget. Sign-in uses Firebase Authentication, and ba
 | `VITE_FIREBASE_APP_ID` | Firebase web app ID. |
 | `VITE_N8N_WEBHOOK_URL` | Main n8n webhook (`.../webhook/api/v1/process`): AI reading of uploads and voice notes, and all saves. |
 | `VITE_N8N_READ_URL` | Optional. Read API webhook (`.../webhook/api/v1/read`). If left out, the app uses the Main URL with `/process` swapped for `/read`. |
+| `VITE_N8N_COACH_URL` | Optional. AI Coach webhook (`.../webhook/api/v1/coach`). If left out, the app uses the Main URL with `/process` swapped for `/coach`. |
 
 Email/Password sign-in must be enabled in the Firebase console (Authentication → Sign-in method).
 
@@ -26,7 +27,8 @@ Anything starting with `VITE_` is bundled into the browser code, so it is public
 
 ## Accounts
 
-- Create an account at `/signup` (email, password, optional monthly salary). After sign-up the app asks n8n to create the user's profile, then opens the dashboard.
+- Create an account at `/signup` (name, email, password, optional monthly salary). The name is saved as the Firebase display name and used in the greeting. After sign-up the app asks n8n to create the user's profile, then opens the dashboard.
+- Users can set or change their name from the profile button in the header. Accounts without a name see an "Add your name" button on the dashboard.
 - Log in at `/login`. There is no built-in demo account.
 
 ## Browser routes
@@ -54,7 +56,7 @@ These screens read and write through n8n (MongoDB behind it), per signed-in user
 
 Monthly expenses are the total of the expense summary (Essential, Adjustable, Optional). That total is the "usual monthly spending" used on the Dashboard, for safe saving capacity, goal checks and the AI Coach. Until a user adds expenses, it is estimated from repeat transactions.
 
-AI Coach still uses demo data from browser `localStorage`.
+The AI Coach asks the `MoBudget_AI_Coach` workflow, which answers from the user's own salary, expenses and goals.
 
 ### Camera scanning
 
@@ -63,6 +65,31 @@ AI Coach still uses demo data from browser `localStorage`.
 ## Demo data
 
 `demo/` has the payslip and receipt files for the demo video, and `npm run seed:demo` loads the demo user's data into MongoDB. See `demo/README.md`.
+
+### Voice notes
+
+The recording is converted in the browser to 16 kHz mono WAV and sent to n8n, where Gemini transcribes and translates it to English before the amount is read. See `n8n/README.md`.
+
+## Look and feel
+
+- Light and dark themes. The app follows the device setting until the user picks one with the sun/moon button in the header (or on the login and signup pages); the choice is remembered in the browser.
+- Colours, spacing and type are CSS custom properties at the top of `src/index.css`. Use them instead of raw colours so both themes stay in step. `DESIGN.md` describes the system.
+- Animations use the `motion` package (loaded after the first paint) and CSS keyframes. Both respect the device's reduced-motion setting.
+
+## Speed
+
+- Each page's code downloads only when the page is first opened.
+- Answers from the Read API are cached per user and shown straight away while a fresh copy loads. Any save clears the cache.
+- n8n skips the Google token check for a token it verified in the last hour (see `n8n/README.md`).
+- Host n8n on an always-on service. A sleeping free tier adds 30 to 60 seconds to the first request.
+
+## Deploying (Vercel)
+
+1. Host n8n publicly first (see "Hosting n8n for the public app" in `n8n/README.md`).
+2. In Vercel, **Add New → Project**, import this GitHub repository. `vercel.json` already sets the Vite build, the `dist` output folder, and a rewrite so routes like `/goals` work on refresh.
+3. Under **Settings → Environment Variables**, add every `VITE_` variable from the table above, using the public n8n URL. Redeploy after changing them, because they are baked in at build time.
+4. In the Firebase console, **Authentication → Settings → Authorized domains**, add the Vercel domain (for example `mobudget.vercel.app`) and any custom domain. Sign-in fails on domains not on this list.
+5. Every push to the main branch then deploys automatically; other branches get preview URLs.
 
 ## Languages
 
