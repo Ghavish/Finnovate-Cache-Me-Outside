@@ -22,14 +22,14 @@
     },
     {
       "parameters": {
-        "jsCode": "// --- Auth Bouncer (Code node) ---\n// Runs after \"Verify Firebase Token\", which asked Google to check the ID token.\n// Any userId or email sent by the client is dropped and replaced.\n// Mode: Run Once for All Items.\nconst IDENTITY_FIELDS = ['userId', 'email']\n\nconst users = $input.first().json.users || []\nif (!users.length) throw new Error('UNAUTHORIZED: no Firebase user for this token')\nconst verifiedUser = users[0]\n\n// --- Output: the request body plus the verified identity ---\nconst requestBody = $('Read Webhook').first().json.body || {}\nconst safeBody = Object.fromEntries(\n  Object.entries(requestBody).filter(([key]) => !IDENTITY_FIELDS.includes(key)),\n)\nreturn [{ json: { ...safeBody, userId: verifiedUser.localId, email: verifiedUser.email ?? null } }]\n"
+        "jsCode": "// --- Auth Bouncer (Code node) ---\n// Runs after \"Verify Firebase Token\" (Google checked the ID token) or straight from\n// \"Token Cached?\" when the same token was checked in the last hour.\n// Any userId or email sent by the client is dropped and replaced.\n// Mode: Run Once for All Items.\nconst IDENTITY_FIELDS = ['userId', 'email']\n\nconst users = $input.first().json.users || []\nif (!users.length) throw new Error('UNAUTHORIZED: no Firebase user for this token')\nconst verifiedUser = users[0]\n\n// --- Remember a fresh Google check, so the next request skips it (see \"Token Cache\") ---\n// Kept until the token expires, and never longer than an hour.\nif ($input.first().json.cacheHit !== 'yes') {\n  const tokenKey = $('Token Cache').first().json.tokenKey\n  const headers = $('Read Webhook').first().json.headers || {}\n  const token = String(headers.authorization || '').replace(/^Bearer\\s+/i, '').trim()\n  const now = Math.floor(Date.now() / 1000)\n  let tokenExp = now\n  try {\n    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')\n    tokenExp = Number(JSON.parse(Buffer.from(payload, 'base64').toString('utf8')).exp) || now\n  } catch { /* unreadable token: do not cache it */ }\n  const store = $getWorkflowStaticData('global')\n  const cache = store.verifiedTokens || {}\n  for (const [key, entry] of Object.entries(cache)) if (entry.exp <= now) delete cache[key]\n  if (tokenKey && tokenExp > now) cache[tokenKey] = { uid: verifiedUser.localId, email: verifiedUser.email ?? null, exp: Math.min(tokenExp, now + 3600) }\n  store.verifiedTokens = cache\n}\n\n// --- Output: the request body plus the verified identity ---\nconst requestBody = $('Read Webhook').first().json.body || {}\nconst safeBody = Object.fromEntries(\n  Object.entries(requestBody).filter(([key]) => !IDENTITY_FIELDS.includes(key)),\n)\nreturn [{ json: { ...safeBody, userId: verifiedUser.localId, email: verifiedUser.email ?? null } }]\n"
       },
       "id": "413415d7-3fab-4669-a66f-6fce1ebef642",
       "name": "Auth Bouncer",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        220,
+        660,
         300
       ],
       "onError": "continueErrorOutput"
@@ -47,7 +47,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        440,
+        880,
         520
       ]
     },
@@ -162,7 +162,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        440,
+        880,
         280
       ]
     },
@@ -179,7 +179,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        700,
+        1140,
         560
       ]
     },
@@ -194,7 +194,7 @@
       "type": "n8n-nodes-base.mongoDb",
       "typeVersion": 1.5,
       "position": [
-        700,
+        1140,
         280
       ],
       "alwaysOutputData": true,
@@ -214,7 +214,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        940,
+        1380,
         280
       ]
     },
@@ -227,7 +227,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1160,
+        1600,
         280
       ]
     },
@@ -237,7 +237,7 @@
         "url": "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyClep1OeRQHb18zuwGblC8ld6Eak5_wnso",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ idToken: String(($json.headers || {}).authorization || '').replace(/^Bearer\\s+/i, '').trim() }) }}",
+        "jsonBody": "={{ JSON.stringify({ idToken: String(($('Read Webhook').first().json.headers || {}).authorization || '').replace(/^Bearer\\s+/i, '').trim() }) }}",
         "options": {
           "timeout": 10000
         }
@@ -247,10 +247,56 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        220,
+        660,
         120
       ],
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- Token Cache (Code node) ---\n// Runs first. If Google already verified this exact ID token in the last hour,\n// skip the call to Google (\"Verify Firebase Token\") and reuse the verified user.\n// Tokens are stored only as SHA-256 hashes, in this workflow's static data.\n// Mode: Run Once for All Items.\n\n// SHA-256 of an ASCII string, in plain JavaScript (Code nodes cannot load 'crypto' by default).\nfunction sha256(text) {\n  const K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]\n  const hash = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]\n  const bytes = Array.from(unescape(encodeURIComponent(text)), (char) => char.charCodeAt(0))\n  const bitLength = bytes.length * 8\n  bytes.push(0x80)\n  while (bytes.length % 64 !== 56) bytes.push(0)\n  for (let shift = 56; shift >= 0; shift -= 8) bytes.push(shift >= 32 ? Math.floor(bitLength / 2 ** shift) & 0xff : (bitLength >>> shift) & 0xff)\n  const rotate = (value, count) => (value >>> count) | (value << (32 - count))\n  const words = new Array(64)\n  for (let offset = 0; offset < bytes.length; offset += 64) {\n    for (let i = 0; i < 16; i++) words[i] = (bytes[offset + i * 4] << 24) | (bytes[offset + i * 4 + 1] << 16) | (bytes[offset + i * 4 + 2] << 8) | bytes[offset + i * 4 + 3]\n    for (let i = 16; i < 64; i++) {\n      const s0 = rotate(words[i - 15], 7) ^ rotate(words[i - 15], 18) ^ (words[i - 15] >>> 3)\n      const s1 = rotate(words[i - 2], 17) ^ rotate(words[i - 2], 19) ^ (words[i - 2] >>> 10)\n      words[i] = (words[i - 16] + s0 + words[i - 7] + s1) | 0\n    }\n    let [a, b, c, d, e, f, g, h] = hash\n    for (let i = 0; i < 64; i++) {\n      const t1 = (h + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + words[i]) | 0\n      const t2 = ((rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0\n      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0\n    }\n    hash[0] = (hash[0] + a) | 0; hash[1] = (hash[1] + b) | 0; hash[2] = (hash[2] + c) | 0; hash[3] = (hash[3] + d) | 0\n    hash[4] = (hash[4] + e) | 0; hash[5] = (hash[5] + f) | 0; hash[6] = (hash[6] + g) | 0; hash[7] = (hash[7] + h) | 0\n  }\n  return hash.map((word) => (word >>> 0).toString(16).padStart(8, '0')).join('')\n}\n\n// --- Input: the bearer token ---\nconst headers = $('Read Webhook').first().json.headers || {}\nconst token = String(headers.authorization || '').replace(/^Bearer\\s+/i, '').trim()\nconst tokenKey = token ? sha256(token) : ''\n\n// --- Look it up ---\nconst store = $getWorkflowStaticData('global')\nconst hit = tokenKey && store.verifiedTokens ? store.verifiedTokens[tokenKey] : null\nif (hit && hit.exp > Math.floor(Date.now() / 1000)) {\n  return [{ json: { cacheHit: 'yes', users: [{ localId: hit.uid, email: hit.email }] } }]\n}\nreturn [{ json: { cacheHit: 'no', tokenKey } }]\n"
+      },
+      "id": "b1e33111-807c-4a8a-9feb-8d8800671903",
+      "name": "Token Cache",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-token-cached",
+              "leftValue": "={{ $json.cacheHit }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f4ea814c-196c-4db6-a01d-1cff0302b31d",
+      "name": "Token Cached?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
     }
   ],
   "pinData": {},
@@ -259,7 +305,7 @@
       "main": [
         [
           {
-            "node": "Verify Firebase Token",
+            "node": "Token Cache",
             "type": "main",
             "index": 0
           }
@@ -357,6 +403,35 @@
         [
           {
             "node": "Respond 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Cache": {
+      "main": [
+        [
+          {
+            "node": "Token Cached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Cached?": {
+      "main": [
+        [
+          {
+            "node": "Auth Bouncer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verify Firebase Token",
             "type": "main",
             "index": 0
           }
