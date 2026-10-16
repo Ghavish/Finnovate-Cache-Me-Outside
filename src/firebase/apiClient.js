@@ -32,3 +32,13 @@ export async function readN8n(payload) {
   const body = await callN8n(payload, READ_URL);
   return body.data;
 }
+
+// AI Coach workflow. Defaults to the same n8n host. 
+// COMMENT OUT IF AI COACH FAILS
+const COACH_URL =
+  import.meta.env.VITE_N8N_COACH_URL || PROCESS_URL?.replace(/\/process$/, "/coach");
+
+// Asks the AI Coach a question. Returns { answer, verdict, intent, facts }.
+export async function askCoach(question) {
+  return callN8n({ question }, COACH_URL);
+}

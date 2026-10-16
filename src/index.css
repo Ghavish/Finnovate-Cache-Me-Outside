@@ -351,3 +351,6 @@
 }
 .login-form-panel .auth-language { display:flex; margin-top:0; font-weight:600 }
 @media(max-width:760px){ .topbar .language-picker select { max-width:64px } }
+
+/* If ACTUAL FAILS, COMMENT THIS OUT */
+.coach-question { margin:18px 0 0;color:var(--muted) }.coach-thinking { display:inline-flex;align-items:center;gap:8px;color:var(--muted) }
