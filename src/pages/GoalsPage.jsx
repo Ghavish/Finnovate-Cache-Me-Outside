@@ -1,11 +1,12 @@
 import { AlertTriangle, ArrowRight, CalendarClock, CheckCircle2, Link2, LoaderCircle, Pencil, Plus, RotateCw, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { callN8n, readN8n } from '../firebase/apiClient.js'
+import { callN8n, peekRead, readN8n } from '../firebase/apiClient.js'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { k } from '../i18n/strings.js'
 import { centsToRupees, money, moneyFromCents, rupeesToCents } from '../utils/money.js'
 
+const LIST_GOALS = { inputType: 'listGoals' }
 const emptyForm = () => ({ name: '', targetAmount: '', currentSavings: '', link: '', description: '' })
 
 const VERDICT_TEXT = { SAFE: k('Affordable now'), TIGHT: k('Possible, but tight'), NOT_SAFE: k('Not yet') }
@@ -28,7 +29,7 @@ function GoalCard({ goal, onEdit }) {
   const { t } = useLanguage()
   const verdict = goalVerdict(goal)
   const progress = percent(goal.savedAmountCents, goal.targetAmountCents)
-  return <article className="goal-card">
+  return <article className={`goal-card ${badgeClass(verdict)}`}>
     <div className="goal-card-top"><div><small>{goal.goalType === 'cash' ? t('Cash goal') : t('Product')}</small><h3>{goal.itemName || t('Cash goal')}</h3></div><span className={`status-badge ${badgeClass(verdict)}`}>{t(VERDICT_TEXT[verdict])}</span></div>
     <strong className="goal-amount">{moneyFromCents(goal.targetAmountCents)}</strong>
     <div className="goal-progress-label"><span>{t('{amount} saved', { amount: moneyFromCents(goal.savedAmountCents) })}</span><b>{progress}%</b></div>
@@ -104,7 +105,7 @@ function RiskModal({ result, onClose, onAdd, adding }) {
 export default function GoalsPage({ startCreating = false }) {
   const navigate = useNavigate()
   const { t } = useLanguage()
-  const [goals, setGoals] = useState(null)
+  const [goals, setGoals] = useState(() => peekRead(LIST_GOALS)?.goals ?? null)
   const [loadError, setLoadError] = useState('')
   const [editingGoal, setEditingGoal] = useState(null)
   const [creating, setCreating] = useState(startCreating); const [form, setForm] = useState(emptyForm)
@@ -112,7 +113,7 @@ export default function GoalsPage({ startCreating = false }) {
   const progress = useMemo(() => percent(Number(form.currentSavings) || 0, Number(form.targetAmount) || 0), [form])
   const update = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
 
-  const loadGoals = useCallback(() => readN8n({ inputType: 'listGoals' })
+  const loadGoals = useCallback(() => readN8n(LIST_GOALS)
     .then((data) => { setGoals(data.goals); setLoadError('') })
     .catch((err) => {
       console.error('Goals load failed:', err)

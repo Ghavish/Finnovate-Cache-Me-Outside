@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-16T00:00:00Z",
+  "title": "Design System: MoBudget",
+  "extensions": {
+    "colorMeta": {
+      "teal": { "role": "primary", "displayName": "Aurora Teal" },
+      "indigo": { "role": "secondary", "displayName": "Aurora Indigo" },
+      "night": { "role": "neutral", "displayName": "Night Panel" },
+      "rail": { "role": "neutral", "displayName": "Side Rail" }
+    },
+    "shadows": [
+      { "name": "shadow", "value": "0 1px 2px rgba(14,26,34,.04), 0 14px 34px -14px rgba(14,26,34,.16)", "purpose": "Cards in light mode." },
+      { "name": "shadow-lg", "value": "0 2px 6px rgba(14,26,34,.06), 0 30px 60px -24px rgba(14,26,34,.28)", "purpose": "Hero and modals." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "Entrances, hovers and count-ups." },
+      { "name": "aurora-drift", "value": "22s ease-in-out infinite alternate", "purpose": "The aurora band only." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "760px" },
+      { "name": "tablet", "value": "1000px" },
+      { "name": "dashboard-stack", "value": "1100px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action on every screen.",
+      "html": "<button class=\"ds-btn\">Analyse my finances</button>",
+      "css": ".ds-btn { min-height: 46px; padding: 0 18px; border: 0; border-radius: 14px; background: #0D9488; color: #04201C; font-weight: 700; box-shadow: 0 10px 24px -12px rgba(13,148,136,.8); }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A money figure with its label.",
+      "html": "<article class=\"ds-card\"><small>Monthly salary</small><strong>Rs 45,000</strong></article>",
+      "css": ".ds-card { display: grid; gap: 6px; padding: 22px; border: 1px solid rgba(14,26,34,.09); border-radius: 20px; background: #fff; } .ds-card small { color: #557080; } .ds-card strong { font-size: 30px; font-weight: 650; font-variant-numeric: tabular-nums; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Money as a calm sky at night",
+    "overview": "A working finance app on slate grounds, lit by one aurora band of teal and indigo. Numbers first; verdict colours only for verdicts.",
+    "keyCharacteristics": ["Dark side rail in both themes", "Aurora band in five brand places", "Tabular money figures", "Verdict-tinted goal cards"],
+    "rules": [
+      { "name": "Verdict colours do real jobs", "body": "Safe, tight and danger colours mark verdicts and money direction only.", "section": "colors" },
+      { "name": "Aurora only where the brand speaks", "body": "Hero, salary card, coach orb, login panel, 404.", "section": "colors" }
+    ],
+    "dos": ["Use the CSS custom properties", "Respect reduced motion"],
+    "donts": ["No gradient text", "No teal-deep as small text on light grounds"]
+  }
+}

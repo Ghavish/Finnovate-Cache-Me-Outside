@@ -1,7 +1,9 @@
 import { Bot, LayoutDashboard, Plus, ReceiptText, Target } from 'lucide-react'
+import { m } from 'motion/react'
 import { NavLink } from 'react-router-dom'
 import { useLanguage } from '../../i18n/LanguageContext.jsx'
 import { k } from '../../i18n/strings.js'
+import Logo from './Logo.jsx'
 
 const links = [
   { to: '/dashboard', label: k('Dashboard'), icon: LayoutDashboard },
@@ -14,14 +16,14 @@ export default function Sidebar() {
   const { t } = useLanguage()
   return (
     <aside className="sidebar" aria-label={t('Main navigation')}>
-      <div className="brand">
-        <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
-        <span><strong>MoBudget</strong><small>{t('Smart money planning')}</small></span>
-      </div>
+      <Logo tagline={t('Smart money planning')} />
       <nav className="sidebar-nav">
         {links.map(({ to, label, icon: Icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <Icon size={19} /><span>{t(label)}</span>
+            {({ isActive }) => <>
+              {isActive && <m.span className="nav-indicator" layoutId="nav-indicator" transition={{ type: 'spring', visualDuration: 0.3, bounce: 0.2 }} />}
+              <Icon size={19} /><span>{t(label)}</span>
+            </>}
           </NavLink>
         ))}
       </nav>
