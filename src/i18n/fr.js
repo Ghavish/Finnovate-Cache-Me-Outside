@@ -314,4 +314,10 @@ export default {
   "Switch to light mode": "Passer en mode clair",
   "Switch to dark mode": "Passer en mode sombre",
   "Add your name": "Ajoutez votre nom",
+  // Coinview redesign (drafts: please review)
+  "Your figures": "Vos chiffres",
+  "Recent transactions": "Transactions récentes",
+  "View all": "Tout voir",
+  "Name": "Nom",
+  "Amount": "Montant",
 }

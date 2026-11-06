@@ -584,14 +584,47 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .name-prompt:hover { border-style: solid; background: var(--accent-soft) }
 
-.dash-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start }
-.dash-main { display: grid; gap: 20px; min-width: 0 }
+/* Page order (Coinview "Overview"): big figure + pastel cards, then the hero and links, then the table */
+.dashboard-page > :is(.overview-top, .dashboard-hero, .quick-grid) { margin-bottom: 20px }
+.overview-top { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.6fr); gap: 20px; align-items: stretch }
+.overview-block { display: flex; flex-direction: column; min-width: 0 }
+.block-title { margin: 0 0 14px; color: var(--text); font-size: 20px; font-weight: 650 }
+
+.balance-card {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 200px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tint-sky-ink) 16%, transparent);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  background: var(--tint-sky);
+  box-shadow: var(--shadow);
+  animation: rise .6s var(--ease-out) both;
+}
+.balance-card::after { /* quiet light in the corner, in place of Coinview's chart */
+  content: "";
+  position: absolute;
+  inset: -70% -40% auto 30%;
+  height: 340px;
+  pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--tint-sky-ink) 14%, transparent), transparent 72%);
+  filter: blur(24px);
+}
+.balance-icon { position: absolute; top: 22px; left: 24px; display: grid; width: 44px; height: 44px; place-items: center; border-radius: 13px; color: var(--tint-sky-ink); background: var(--surface); box-shadow: var(--shadow-sm) }
+.balance-card strong { position: relative; color: var(--text); font-size: clamp(36px, 4vw, 50px); font-weight: 650; line-height: 1.05; letter-spacing: -.035em }
+.balance-card.negative strong { color: var(--danger) }
+.balance-card small { position: relative; color: var(--muted); font-size: 14px; font-weight: 500 }
 
 .dashboard-hero {
   position: relative;
   isolation: isolate;
   display: flex;
-  min-height: 320px;
+  min-height: 240px;
   align-items: flex-end;
   overflow: hidden;
   border: 1px solid var(--feature-line);
@@ -636,13 +669,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dashboard-hero a svg { transition: transform .2s var(--ease-out) }
 .dashboard-hero a:hover svg { transform: translateX(3px) }
 
-.summary-grid { display: grid; gap: 14px }
-.summary-grid article { position: relative; display: grid; gap: 6px; overflow: hidden; padding: 22px }
-.summary-grid article > svg { width: 38px; height: 38px; margin-bottom: 8px; border-radius: 11px; padding: 9px; color: var(--accent-ink); background: var(--accent-soft) }
-.summary-grid article:nth-child(3) > svg { color: var(--accent-2-ink); background: color-mix(in srgb, var(--accent-2) 14%, transparent) }
-.summary-grid small { color: var(--muted); font-size: 14px }
-.summary-grid strong { color: var(--text); font-size: 30px; font-weight: 650; letter-spacing: -.03em }
-.summary-grid .card-note { font-size: 12px }
+/* Coinview "Your Assets": three pastel cards with a white icon tile at the foot */
+.summary-grid { display: grid; flex: 1; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px }
+.summary-grid article { --tint: var(--tint-lilac); --tint-ink: var(--tint-lilac-ink); position: relative; display: flex; min-width: 0; min-height: 200px; flex-direction: column; gap: 4px; overflow: hidden; padding: 22px; border-color: color-mix(in srgb, var(--tint-ink) 14%, transparent); background: var(--tint); box-shadow: none }
+.summary-grid article.tint-mint { --tint: var(--tint-mint); --tint-ink: var(--tint-mint-ink) }
+.summary-grid article.tint-cream { --tint: var(--tint-cream); --tint-ink: var(--tint-cream-ink) }
+.summary-grid strong { color: var(--text); font-size: clamp(22px, 2.1vw, 28px); font-weight: 650; letter-spacing: -.03em; overflow-wrap: anywhere }
+.summary-grid small { color: color-mix(in srgb, var(--text) 72%, var(--tint-ink)); font-size: 14px; font-weight: 500 }
+.summary-grid .tile-icon { display: grid; width: 42px; height: 42px; margin-top: auto; place-items: center; border-radius: 12px; color: var(--tint-ink); background: var(--surface); box-shadow: var(--shadow-sm) }
+.summary-grid .card-note { position: absolute; right: 18px; bottom: 26px; max-width: calc(100% - 90px); color: var(--tint-ink); font-size: 12px; font-weight: 600; text-align: right; line-height: 1.3 }
 
 .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px }
 .quick-grid a { display: flex; flex-direction: column; padding: 24px; text-decoration: none; transition: transform .25s var(--ease-out), border-color .25s ease }
@@ -652,6 +687,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .quick-grid span { display: flex; align-items: center; gap: 6px; margin-top: auto; color: var(--accent-ink); font-weight: 650 }
 .quick-grid a:hover span svg { transform: translateX(3px) }
 .quick-grid span svg { transition: transform .2s var(--ease-out) }
+/* Coinview's market table, with the latest transactions */
+.recent-card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px 24px 12px; background: var(--surface); box-shadow: var(--shadow) }
+.recent-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px }
+.recent-head h2 { margin: 0; font-size: 20px; font-weight: 650 }
+.pill-link { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); border-radius: 99px; padding: 7px 14px; color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none; transition: background-color .2s ease }
+.pill-link:hover { background: var(--raised) }
+.recent-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums }
+.recent-table th { padding: 10px 12px; color: var(--muted); font-size: 13px; font-weight: 600; text-align: left; border-bottom: 1px solid var(--line) }
+.recent-table td { padding: 12px; border-bottom: 1px solid var(--line); color: var(--text) }
+.recent-table tbody tr:last-child td { border-bottom: 0 }
+.recent-table tbody tr { transition: background-color .2s ease }
+.recent-table tbody tr:hover { background: var(--raised) }
+.recent-table :is(th, td):first-child { padding-left: 0 }
+.recent-table .tx-label { display: flex; align-items: center; gap: 12px; min-width: 0 }
+.recent-table .tx-label > span { display: grid; min-width: 0 }
+.recent-table .tx-label b { font-weight: 650; overflow-wrap: anywhere }
+.recent-table .tx-label small { color: var(--muted); font-size: 12px }
+.recent-table .col-category, .recent-table .col-date { color: var(--muted); font-size: 14px }
+.recent-table .col-amount { text-align: right; white-space: nowrap; font-weight: 650 }
+.recent-table td.col-amount.income { color: var(--safe) }
+.recent-table :is(th, td):last-child { padding-right: 0 }
+
 .reset-button { display: flex; align-items: center; gap: 7px; margin-top: 20px; border: 0; color: var(--muted); background: transparent }
 
 .load-error {
@@ -1189,11 +1246,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 @media (max-width: 1100px) {
   /* One column, in the original order: hero, figures, then quick links */
-  .dash-layout { display: flex; flex-direction: column; align-items: stretch }
-  .dash-main { display: contents }
-  .dashboard-hero { order: 1 }
-  .summary-grid { order: 2; grid-template-columns: repeat(3, 1fr) }
-  .quick-grid { order: 3 }
+  /* Big figure on its own row, then the three pastel cards */
+  .overview-top { grid-template-columns: 1fr }
+  .balance-card { min-height: 170px }
+  .summary-grid article { min-height: 160px }
 }
 
 @media (max-width: 1000px) {
@@ -1224,9 +1280,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .summary-grid, .quick-grid, .fo-stat-row, .result-grid, .input-workspace, .metric-grid, .field-grid, .manual-entry-fields { grid-template-columns: 1fr }
   .field-grid .full-width { grid-column: auto }
   .dashboard-hero { min-height: 0; padding: 26px; border-radius: var(--r-lg) }
-  .summary-grid article { grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 2px; padding: 18px }
-  .summary-grid article > svg { grid-row: span 3; margin: 0 }
+  .summary-grid article { min-height: 0; padding: 18px 18px 18px 78px }
+  .summary-grid .tile-icon { position: absolute; top: 50%; left: 18px; margin: 0; transform: translateY(-50%) }
   .summary-grid strong { font-size: 26px }
+  .summary-grid .card-note { position: static; max-width: none; text-align: left }
+  .recent-card { padding: 18px 16px 6px }
+  .recent-table .col-category, .recent-table thead { display: none }
+  .recent-table td { padding: 11px 6px }
   .goal-amount { font-size: 30px; margin: 22px 0 18px }
 
   .mobile-nav {
