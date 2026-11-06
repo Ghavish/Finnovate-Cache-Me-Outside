@@ -1,7 +1,8 @@
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, LoaderCircle, Pencil, Plus, RotateCw, Trash2, X } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, House, LoaderCircle, Pencil, Plus, ReceiptText, RotateCw, ShoppingBag, Sparkles, Trash2, Wallet, X } from 'lucide-react'
 import { AnimatePresence, m } from 'motion/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { LogoMark } from '../components/layout/Logo.jsx'
 import CountUp from '../components/ui/CountUp.jsx'
 import { callN8n, peekRead, readN8n } from '../firebase/apiClient.js'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
@@ -10,10 +11,11 @@ import { k } from '../i18n/strings.js'
 import { centsToRupees, moneyFromCents, rupeesToCents } from '../utils/money.js'
 
 const GROUPS = [
-  { id: 'essential', label: EXPENSE_GROUP_LABELS.essential, hint: k('Rent, bills, groceries, transport') },
-  { id: 'adjustable', label: EXPENSE_GROUP_LABELS.adjustable, hint: k('Eating out, clothing, household') },
-  { id: 'optional', label: EXPENSE_GROUP_LABELS.optional, hint: k('Entertainment, subscriptions, gifts') },
+  { id: 'essential', label: EXPENSE_GROUP_LABELS.essential, hint: k('Rent, bills, groceries, transport'), icon: House },
+  { id: 'adjustable', label: EXPENSE_GROUP_LABELS.adjustable, hint: k('Eating out, clothing, household'), icon: ShoppingBag },
+  { id: 'optional', label: EXPENSE_GROUP_LABELS.optional, hint: k('Entertainment, subscriptions, gifts'), icon: Sparkles },
 ]
+const sumCents = (items) => items.reduce((sum, item) => sum + item.amountCents, 0)
 const TRANSACTION_LIMIT = 20
 const DASHBOARD = { inputType: 'getDashboard' }
 const TRANSACTIONS = { inputType: 'listTransactions', limit: TRANSACTION_LIMIT }
@@ -41,7 +43,8 @@ function SalaryCard({ salaryCents, onSaved }) {
     } finally { setSaving(false) }
   }
 
-  return <article className="fo-stat-card blue">
+  return <article className="fo-stat-card blue my-card">
+    <div className="card-top" aria-hidden="true"><span className="card-chip" /><LogoMark size={30} /></div>
     <small>{t('Monthly salary')}</small>
     {editing ? <>
       <div className="edit-input"><b>Rs</b><input type="number" min="0" step="0.01" inputMode="decimal" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label={t('Monthly salary in rupees')} autoFocus /></div>
@@ -51,23 +54,32 @@ function SalaryCard({ salaryCents, onSaved }) {
   </article>
 }
 
-// --- Expense summary: three groups, each opens to list its expenses ---
-function ExpenseGroup({ group, items, open, onToggle }) {
+// --- Category: one tile per expense group; the selected group's expenses show in the summary below My card ---
+function CategoryTile({ group, items, selected, onSelect }) {
   const { t } = useLanguage()
-  const total = items.reduce((sum, item) => sum + item.amountCents, 0)
-  return <div className={`expense-group ${group.id} ${open ? 'open' : ''}`}>
-    <button type="button" className="expense-row" onClick={onToggle} aria-expanded={open}>
-      <span>{t(group.label)}<small>{items.length === 1 ? t('{count} expense', { count: 1 }) : t('{count} expenses', { count: items.length })}</small></span>
-      <strong>{moneyFromCents(total)}<ChevronDown size={18} /></strong>
-    </button>
-    <AnimatePresence initial={false}>
-      {open && <m.div key="items" className="expense-reveal" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ type: 'spring', visualDuration: 0.3, bounce: 0 }}>
-        {items.length ? <ul className="expense-items">
-          {items.map((item, index) => <li key={`${item.name}-${index}`}><span>{item.name}</span><b>{moneyFromCents(item.amountCents)}</b></li>)}
-        </ul> : <p className="expense-empty">{t('Nothing added to {group} yet.', { group: t(group.label) })}</p>}
-      </m.div>}
-    </AnimatePresence>
-  </div>
+  const Icon = group.icon
+  return <button type="button" className={`category-tile ${group.id} ${selected ? 'selected' : ''}`} onClick={onSelect} aria-pressed={selected}>
+    <span className="category-icon" aria-hidden="true"><Icon size={19} /></span>
+    <span className="category-name">{t(group.label)}</span>
+    <strong>{moneyFromCents(sumCents(items))}</strong>
+    <small>{items.length === 1 ? t('{count} expense', { count: 1 }) : t('{count} expenses', { count: items.length })}</small>
+  </button>
+}
+
+// --- Statistics: a ring showing how much of the salary the monthly expenses use ---
+function StatisticsRing({ salaryCents, expensesCents, safeCents }) {
+  const { t } = useLanguage()
+  const share = salaryCents > 0 ? Math.min(expensesCents / salaryCents, 1) : 0
+  const percent = Math.round(share * 100)
+  const radius = 76
+  const length = 2 * Math.PI * radius
+  return <figure className={`stats-ring ${safeCents < 0 ? 'negative' : ''}`}>
+    <svg viewBox="0 0 180 180" role="img" aria-label={salaryCents > 0 ? t('Expenses use {percent}% of your salary', { percent }) : t('Monthly expenses vs salary')}>
+      <circle className="ring-track" cx="90" cy="90" r={radius} />
+      <m.circle className="ring-value" cx="90" cy="90" r={radius} strokeDasharray={length} initial={{ strokeDashoffset: length }} animate={{ strokeDashoffset: length * (1 - share) }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} />
+    </svg>
+    <figcaption><small>{t('Safe saving capacity')}</small><strong><CountUp value={safeCents} format={moneyFromCents} /></strong></figcaption>
+  </figure>
 }
 
 // --- Edit monthly expenses: add, change or remove items in each group ---
@@ -134,7 +146,7 @@ export default function FinancialOverviewPage() {
   const [overview, setOverview] = useState(() => peekRead(DASHBOARD) ?? null)
   const [transactions, setTransactions] = useState(() => peekRead(TRANSACTIONS)?.transactions ?? null)
   const [error, setError] = useState('')
-  const [openGroup, setOpenGroup] = useState(null)
+  const [openGroup, setOpenGroup] = useState(GROUPS[0].id)
   const [editingExpenses, setEditingExpenses] = useState(false)
 
   const load = useCallback(() => Promise.all([
@@ -151,40 +163,65 @@ export default function FinancialOverviewPage() {
 
   const expenses = overview?.monthlyExpenses || []
   const value = (render) => (overview ? render(overview) : error ? '—' : '…')
+  const selectedGroup = GROUPS.find((group) => group.id === openGroup) || GROUPS[0]
+  const selectedItems = expenses.filter((e) => e.group === selectedGroup.id)
 
   return <main className="main-content financial-page">
     <section className="page-heading"><span className="eyebrow">{t('FINANCIAL OVERVIEW')}</span><h1>{t('Salary, expenses and past transactions')}</h1><p>{t('Keep your salary and monthly expenses up to date. MoBudget uses them on the Dashboard and for your goals.')}</p></section>
     {error && <div className="load-error"><p>{t(error)}</p><button type="button" className="secondary-button" onClick={load}><RotateCw size={16} /> {t('Try again')}</button></div>}
 
-    <section className="fo-stat-row">
-      {overview ? <SalaryCard salaryCents={overview.salaryCents} onSaved={load} /> : <article className="fo-stat-card blue"><small>{t('Monthly salary')}</small><strong>{value(() => '')}</strong></article>}
-      <article className="fo-stat-card amber"><small>{t('Monthly expenses')}</small><strong>{value((d) => <CountUp value={d.monthlyRoutineCents || 0} format={moneyFromCents} />)}</strong><span className="fo-note">{overview?.spendingSource === 'declared' ? t('Total of your expense summary') : t('Estimated from repeat spending until you add your expenses')}</span></article>
-      <article className="fo-stat-card safe"><small>{t('Safe saving capacity')}</small><strong>{value((d) => <CountUp value={d.safeSavingCapacityCents || 0} format={moneyFromCents} />)}</strong><span className="fo-note">{t('Salary minus monthly expenses')}</span></article>
-    </section>
+    {/* Welcome Rakib layout with Wallet styling: My card + Category, their lists below, Statistics on the right */}
+    <div className="wallet-board">
+      <div className="wallet-main">
+        <section className="wallet-section area-card" aria-labelledby="my-card-title">
+          <div className="section-head"><h2 id="my-card-title">{t('My card')}</h2></div>
+          {overview ? <SalaryCard salaryCents={overview.salaryCents} onSaved={load} /> : <article className="fo-stat-card blue my-card"><div className="card-top" aria-hidden="true"><span className="card-chip" /><LogoMark size={30} /></div><small>{t('Monthly salary')}</small><strong>{value(() => '')}</strong></article>}
+        </section>
 
-    <section className="fo-card-row">
-      <article className="fo-card">
-        <div className="fo-card-head"><h2>{t('Expense summary')}</h2><button type="button" className="text-button fo-edit" onClick={() => setEditingExpenses(true)} disabled={!overview}><Pencil size={15} />{t('Edit')}</button></div>
-        {!overview && !error && <p className="empty-state"><LoaderCircle className="spinner" size={18} /> {t('Loading…')}</p>}
-        {overview && !expenses.length && <p className="expense-hint">{t('No monthly expenses yet. Click Edit to add rent, bills and other costs you pay each month.')}</p>}
-        {overview && GROUPS.map((group) => (
-          <ExpenseGroup key={group.id} group={group} items={expenses.filter((e) => e.group === group.id)} open={openGroup === group.id} onToggle={() => setOpenGroup((current) => (current === group.id ? null : group.id))} />
-        ))}
-      </article>
+        <section className="wallet-section area-category" aria-labelledby="category-title">
+          <div className="section-head"><h2 id="category-title">{t('Category')}</h2><button type="button" className="text-button fo-edit" onClick={() => setEditingExpenses(true)} disabled={!overview}><Pencil size={15} />{t('Edit')}</button></div>
+          <div className="category-grid">
+            {GROUPS.map((group) => <CategoryTile key={group.id} group={group} items={expenses.filter((e) => e.group === group.id)} selected={selectedGroup.id === group.id} onSelect={() => setOpenGroup(group.id)} />)}
+          </div>
+        </section>
 
-      <article className="fo-card">
-        <h2>{t('Past transactions')}</h2>
-        {!transactions && !error && <p className="empty-state"><LoaderCircle className="spinner" size={18} /> {t('Loading…')}</p>}
-        {transactions?.length === 0 && <p className="expense-hint">{t('No transactions yet.')} <Link to="/input-data">{t('Add your first one')}</Link></p>}
-        {transactions?.length > 0 && <ul className="transaction-list">
-          {transactions.map((tx) => <li key={tx.id}>
-            <span>{formatDate(tx.txnDate)}</span>
-            <span className="tx-label"><i className={`tx-chip ${tx.direction}`} aria-hidden="true">{tx.direction === 'income' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</i><span><b>{tx.name || t(categoryLabel(tx.category))}</b><small>{[tx.vendor, t(categoryLabel(tx.category))].filter(Boolean).join(' · ')}</small></span></span>
-            <strong className={tx.direction}>{tx.direction === 'income' ? '+ ' : '- '}{moneyFromCents(tx.amountCents)}</strong>
-          </li>)}
-        </ul>}
-      </article>
-    </section>
+        <section className="fo-card area-expenses" aria-labelledby="expense-summary-title">
+          <div className="fo-card-head"><h2 id="expense-summary-title">{t('Expense summary')}</h2><span className={`group-pill ${selectedGroup.id}`}>{t(selectedGroup.label)}</span></div>
+          {!overview && !error && <p className="empty-state"><LoaderCircle className="spinner" size={18} /> {t('Loading…')}</p>}
+          {overview && !expenses.length && <p className="expense-hint">{t('No monthly expenses yet. Click Edit to add rent, bills and other costs you pay each month.')}</p>}
+          {overview && expenses.length > 0 && <AnimatePresence mode="wait" initial={false}>
+            <m.div key={selectedGroup.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+              {selectedItems.length ? <ul className={`expense-items ${selectedGroup.id}`}>
+                {selectedItems.map((item, index) => <li key={`${item.name}-${index}`}><span>{item.name}</span><b>{moneyFromCents(item.amountCents)}</b></li>)}
+              </ul> : <p className="expense-empty">{t('Nothing added to {group} yet.', { group: t(selectedGroup.label) })}</p>}
+            </m.div>
+          </AnimatePresence>}
+        </section>
+
+        <section className="fo-card area-transactions" aria-labelledby="past-title">
+          <h2 id="past-title">{t('Past transactions')}</h2>
+          {!transactions && !error && <p className="empty-state"><LoaderCircle className="spinner" size={18} /> {t('Loading…')}</p>}
+          {transactions?.length === 0 && <p className="expense-hint">{t('No transactions yet.')} <Link to="/input-data">{t('Add your first one')}</Link></p>}
+          {transactions?.length > 0 && <ul className="transaction-list">
+            {transactions.map((tx) => <li key={tx.id}>
+              <span className="tx-label"><i className={`tx-chip ${tx.direction}`} aria-hidden="true">{tx.direction === 'income' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}</i><span><b>{tx.name || t(categoryLabel(tx.category))}</b><small>{[tx.vendor, t(categoryLabel(tx.category))].filter(Boolean).join(' · ')}</small></span></span>
+              <span className="tx-date">{formatDate(tx.txnDate)}</span>
+              <strong className={tx.direction}>{tx.direction === 'income' ? '+ ' : '- '}{moneyFromCents(tx.amountCents)}</strong>
+            </li>)}
+          </ul>}
+        </section>
+      </div>
+
+      <aside className="stats-panel" aria-labelledby="stats-title">
+        <h2 id="stats-title">{t('Statistics')}</h2>
+        {overview ? <StatisticsRing salaryCents={overview.salaryCents || 0} expensesCents={overview.monthlyRoutineCents || 0} safeCents={overview.safeSavingCapacityCents || 0} /> : <p className="empty-state">{error ? '—' : <><LoaderCircle className="spinner" size={18} /> {t('Loading…')}</>}</p>}
+        {overview?.salaryCents > 0 && <p className="stats-caption">{t('Expenses use {percent}% of your salary', { percent: Math.round(Math.min((overview.monthlyRoutineCents || 0) / overview.salaryCents, 1) * 100) })}</p>}
+        <div className="stats-figures">
+          <article className="stat-mini salary"><span className="stat-icon" aria-hidden="true"><Wallet size={18} /></span><small>{t('Monthly salary')}</small><strong>{value((d) => moneyFromCents(d.salaryCents || 0))}</strong></article>
+          <article className="stat-mini expenses"><span className="stat-icon" aria-hidden="true"><ReceiptText size={18} /></span><small>{t('Monthly expenses')}</small><strong>{value((d) => moneyFromCents(d.monthlyRoutineCents || 0))}</strong><span className="fo-note">{overview?.spendingSource === 'declared' ? t('Total of your expense summary') : t('Estimated from repeat spending until you add your expenses')}</span></article>
+        </div>
+      </aside>
+    </div>
 
     {editingExpenses && <ExpensesEditor expenses={expenses} onClose={() => setEditingExpenses(false)} onSaved={async () => { setEditingExpenses(false); await load() }} />}
   </main>

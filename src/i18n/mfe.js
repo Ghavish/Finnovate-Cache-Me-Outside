@@ -320,4 +320,8 @@ export default {
   "View all": "Get tou",
   "Name": "Nom",
   "Amount": "Montan",
+  "My card": "Mo kart",
+  "Statistics": "Statistik",
+  "Expenses use {percent}% of your salary": "Bann depans pran {percent}% to saler",
+  "Monthly expenses vs salary": "Depans par mwa ek saler",
 }

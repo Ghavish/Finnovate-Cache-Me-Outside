@@ -405,13 +405,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 /* Staggered entrance for card rows */
-.summary-grid > *, .quick-grid > *, .saved-goals > *, .fo-stat-row > *, .result-grid > *, .method-grid > * {
+.summary-grid > *, .quick-grid > *, .saved-goals > *, .wallet-main > *, .category-grid > *, .result-grid > *, .method-grid > * {
   animation: rise .6s var(--ease-out) both;
 }
-:is(.summary-grid, .quick-grid, .saved-goals, .fo-stat-row, .result-grid, .method-grid) > :nth-child(2) { animation-delay: 60ms }
-:is(.summary-grid, .quick-grid, .saved-goals, .fo-stat-row, .result-grid, .method-grid) > :nth-child(3) { animation-delay: 120ms }
-:is(.summary-grid, .quick-grid, .saved-goals, .fo-stat-row, .result-grid, .method-grid) > :nth-child(4) { animation-delay: 180ms }
-:is(.summary-grid, .quick-grid, .saved-goals, .fo-stat-row, .result-grid, .method-grid) > :nth-child(n+5) { animation-delay: 240ms }
+:is(.summary-grid, .quick-grid, .saved-goals, .wallet-main, .category-grid, .result-grid, .method-grid) > :nth-child(2) { animation-delay: 60ms }
+:is(.summary-grid, .quick-grid, .saved-goals, .wallet-main, .category-grid, .result-grid, .method-grid) > :nth-child(3) { animation-delay: 120ms }
+:is(.summary-grid, .quick-grid, .saved-goals, .wallet-main, .category-grid, .result-grid, .method-grid) > :nth-child(4) { animation-delay: 180ms }
+:is(.summary-grid, .quick-grid, .saved-goals, .wallet-main, .category-grid, .result-grid, .method-grid) > :nth-child(n+5) { animation-delay: 240ms }
 @keyframes rise { from { opacity: 0; transform: translateY(14px) } }
 
 /* =========================================================
@@ -886,11 +886,33 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
    ========================================================= */
 
 .source-note { margin: 0 0 18px; border: 1px solid var(--line); border-radius: var(--r); padding: 13px 16px; color: var(--muted); background: var(--raised) }
-.fo-stat-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 18px; margin-bottom: 20px }
-.fo-stat-card { position: relative; display: flex; min-height: 168px; flex-direction: column; justify-content: space-between; gap: 14px; overflow: hidden; padding: 24px; isolation: isolate }
+/* Board: two content columns (Rakib) and a floating Statistics card on the right (Wallet's side panel) */
+.wallet-board { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start }
+.wallet-main {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  grid-template-areas: "card category" "expenses transactions";
+  gap: 20px;
+  align-items: start;
+  min-width: 0;
+}
+.area-card { grid-area: card }
+.area-category { grid-area: category }
+.area-expenses { grid-area: expenses }
+.area-transactions { grid-area: transactions }
+.wallet-section { display: flex; min-width: 0; flex-direction: column }
+.section-head { display: flex; min-height: 30px; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px }
+.section-head h2 { margin: 0; font-size: 20px; font-weight: 650 }
+.fo-edit { display: inline-flex; align-items: center; gap: 6px }
+
+/* My card: the salary as a bank card, on the feature ground (sky pastel in light, night and aurora in dark) */
+.fo-stat-card { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; overflow: hidden; padding: 24px; isolation: isolate }
 .fo-stat-card small { color: var(--muted); font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase }
 .fo-stat-card > strong, .fo-value-row strong { font-size: 30px; font-weight: 650; letter-spacing: -.03em }
-/* Salary is the wallet's balance card: a feature panel (sky pastel in light, night and aurora in dark) */
+.my-card { min-height: 186px; border-radius: var(--r-xl) }
+.my-card .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: auto }
+.card-chip { width: 40px; height: 30px; border-radius: 7px; background: linear-gradient(135deg, #F5D78A, #C9A24A 55%, #EED48E); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12) }
+.my-card .logo-mark { box-shadow: none }
 .fo-stat-card.blue { color: var(--feature-text); background: var(--feature-bg); border-color: var(--feature-line) }
 .fo-stat-card.blue::before {
   content: "";
@@ -902,66 +924,133 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   filter: blur(20px);
 }
 .fo-stat-card.blue small { color: var(--feature-muted) }
-.fo-stat-card.blue > strong, .fo-stat-card.blue .fo-value-row strong { font-size: clamp(34px, 3.4vw, 44px); color: var(--feature-strong) }
+.fo-stat-card.blue > strong, .fo-stat-card.blue .fo-value-row strong { font-size: clamp(30px, 3vw, 40px); color: var(--feature-strong) }
 .fo-stat-card.blue .text-button { color: var(--feature-accent) }
 .fo-stat-card.blue .edit-input b { color: var(--feature-accent) }
 .fo-stat-card.blue .edit-input input { border-color: var(--feature-line); color: var(--feature-strong); background: var(--feature-input) }
 .fo-stat-card.blue .form-error { color: var(--feature-error) }
-.fo-stat-card.amber > strong { color: var(--tight) }
-.fo-stat-card.safe > strong { color: var(--safe) }
-.fo-stat-card.safe { background: linear-gradient(160deg, var(--safe-soft), transparent 70%), var(--surface) }
 .fo-value-row { display: flex; align-items: center; justify-content: space-between; gap: 12px }
 .fo-note { color: var(--muted); font-size: 13px; line-height: 1.45 }
 .fo-edit-actions { display: flex; align-items: center; gap: 12px }
 .edit-input { display: flex; align-items: center; gap: 8px }
 .edit-input input { min-height: 42px; padding: 0 10px }
-.fo-card-row { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.35fr); gap: 18px; align-items: start }
-.fo-card { padding: 24px }
-.fo-card h2 { margin: 0 0 18px; font-size: 20px; font-weight: 650 }
-.fo-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px }
-.fo-card-head h2 { margin: 0 }
-.fo-edit { display: inline-flex; align-items: center; gap: 6px }
-.expense-hint { margin: 0 0 6px; color: var(--muted); line-height: 1.6 }
-.expense-group { --tone: var(--safe); margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r); background: var(--raised) }
-.expense-group.essential { --tone: var(--safe) }
-.expense-group.adjustable { --tone: var(--tight) }
-.expense-group.optional { --tone: var(--accent-2-ink) }
-.expense-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin: 0; border: 0; padding: 14px; color: var(--text); background: transparent; font: inherit; text-align: left }
-.expense-row > span { display: grid; gap: 2px; padding-left: 14px; border-left: 0; position: relative; font-weight: 650 }
-.expense-row > span::before { content: ""; position: absolute; left: 0; top: .5em; width: 6px; height: 6px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tone) 18%, transparent) }
-.expense-row > span small { color: var(--muted); font-size: 12px; font-weight: 500 }
-.expense-row > strong { display: inline-flex; align-items: center; gap: 8px; color: var(--tone) }
-.expense-row > strong svg { color: var(--muted); transition: transform .25s var(--ease-out) }
-.expense-group.open .expense-row > strong svg { transform: rotate(180deg) }
-.expense-reveal { overflow: hidden }
-.expense-items { display: grid; margin: 0; padding: 0 14px 8px; list-style: none }
-.expense-items li { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding: 10px 0; color: var(--text); font-size: 14px }
-.expense-items li span { overflow-wrap: anywhere }
-.expense-items li b { flex: none }
-.expense-empty { margin: 0; padding: 0 14px 14px; color: var(--muted); font-size: 13px }
 
+/* Category tiles: one per expense group; the selected one lights up in its colour (Wallet's highlighted row) */
+.category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px }
+.category-tile {
+  --tone: var(--safe);
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 186px;
+  align-content: start;
+  gap: 4px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 14px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: left;
+  isolation: isolate;
+  transition: transform .25s var(--ease-out), border-color .2s ease, box-shadow .2s ease;
+}
+.category-tile.adjustable { --tone: var(--tight) }
+.category-tile.optional { --tone: var(--accent-2-ink) }
+.category-tile::before { /* Wallet's coloured corner glow */
+  content: "";
+  position: absolute;
+  inset: -40% -40% auto auto;
+  z-index: -1;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--tone) 22%, transparent), transparent);
+  opacity: .7;
+  transition: opacity .2s ease;
+}
+.category-tile:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--tone) 40%, transparent) }
+.category-tile.selected { border-color: var(--tone); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 16%, transparent), var(--shadow) }
+.category-tile.selected::before { opacity: 1.6 }
+.category-icon { display: grid; width: 40px; height: 40px; margin-bottom: 18px; place-items: center; border-radius: 12px; color: var(--tone); background: color-mix(in srgb, var(--tone) 14%, transparent) }
+.category-tile.selected .category-icon { color: var(--surface); background: var(--tone) }
+.category-name { color: var(--muted); font-size: 13px; font-weight: 600 }
+.category-tile strong { font-size: 18px; font-weight: 650; letter-spacing: -.02em; overflow-wrap: anywhere }
+.category-tile small { color: var(--muted); font-size: 12px }
+
+/* Lists under the tiles */
+.fo-card { padding: 22px 24px }
+.fo-card h2 { margin: 0 0 14px; font-size: 20px; font-weight: 650 }
+.fo-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px }
+.fo-card-head h2 { margin: 0 }
+.group-pill { --tone: var(--safe); border-radius: 99px; padding: 5px 12px; color: var(--tone); background: color-mix(in srgb, var(--tone) 13%, transparent); font-size: 13px; font-weight: 650 }
+.group-pill.adjustable { --tone: var(--tight) }
+.group-pill.optional { --tone: var(--accent-2-ink) }
+.expense-hint { margin: 0 0 6px; color: var(--muted); line-height: 1.6 }
+.expense-items { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none }
+.expense-items li { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; color: var(--text); background: var(--raised); font-size: 15px }
+.expense-items li span { overflow-wrap: anywhere }
+.expense-items li b { flex: none; font-weight: 650 }
+.expense-empty { margin: 0; color: var(--muted); font-size: 14px }
+
+/* Past transactions in Wallet's "Recent Activities" rows */
 .transaction-list { list-style: none; margin: 0; padding: 0 }
 .transaction-list li {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   margin: 0 -10px;
-  border-radius: var(--r-sm);
-  padding: 11px 10px;
+  border-radius: var(--r);
+  padding: 10px;
   transition: background-color .2s ease;
 }
-.transaction-list li + li { border-top: 1px solid var(--line) }
+.transaction-list li + li { margin-top: 2px }
 .transaction-list li:hover { background: var(--raised) }
-.transaction-list li > span:first-child { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums }
 .transaction-list .tx-label { display: flex; align-items: center; gap: 12px; min-width: 0 }
-.tx-chip { display: grid; flex: none; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: var(--danger); background: var(--danger-soft) }
+.tx-chip { display: grid; flex: none; width: 36px; height: 36px; place-items: center; border-radius: 50%; color: var(--danger); background: var(--danger-soft) }
 .tx-chip.income { color: var(--safe); background: var(--safe-soft) }
 .transaction-list .tx-label > span { display: grid; min-width: 0 }
 .transaction-list .tx-label b { font-weight: 600; overflow-wrap: anywhere }
 .transaction-list .tx-label small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere }
-.transaction-list strong { white-space: nowrap; font-weight: 650 }
+.transaction-list .tx-date { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap }
+.transaction-list strong { min-width: 96px; text-align: right; white-space: nowrap; font-weight: 650 }
 .transaction-list strong.income { color: var(--safe) }
+
+/* Statistics: Rakib's ring in Wallet's floating side card */
+.stats-panel {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 16px;
+  margin-top: 42px; /* lines up with the cards under the section titles */
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 22px;
+  background: radial-gradient(120% 60% at 100% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%), var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+.stats-panel h2 { margin: 0; font-size: 20px; font-weight: 650 }
+.stats-ring { position: relative; display: grid; width: min(220px, 100%); margin: 4px auto 0; place-items: center }
+.stats-ring svg { width: 100%; height: auto; transform: rotate(-90deg) }
+.stats-ring circle { fill: none; stroke-width: 14 }
+.ring-track { stroke: color-mix(in srgb, var(--safe) 22%, var(--raised)) }
+.ring-value { stroke: var(--tight); stroke-linecap: round }
+.stats-ring.negative .ring-value { stroke: var(--danger) }
+.stats-ring figcaption { position: absolute; display: grid; justify-items: center; gap: 2px; padding: 0 30px; text-align: center }
+.stats-ring figcaption small { color: var(--muted); font-size: 12px; font-weight: 600 }
+.stats-ring figcaption strong { font-size: 24px; font-weight: 650; letter-spacing: -.03em }
+.stats-ring.negative figcaption strong { color: var(--danger) }
+.stats-caption { margin: -4px 0 0; color: var(--muted); font-size: 13px; text-align: center }
+.stats-figures { display: grid; gap: 10px }
+.stat-mini { --tint: var(--tint-lilac); --tint-ink: var(--tint-lilac-ink); display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: center; border-radius: var(--r); padding: 14px; background: var(--tint) }
+.stat-mini.expenses { --tint: var(--tint-mint); --tint-ink: var(--tint-mint-ink) }
+.stat-mini .stat-icon { display: grid; grid-row: span 2; width: 38px; height: 38px; place-items: center; border-radius: 11px; color: var(--tint-ink); background: var(--surface) }
+.stat-mini small { color: color-mix(in srgb, var(--text) 72%, var(--tint-ink)); font-size: 13px; font-weight: 600 }
+.stat-mini strong { font-size: 20px; font-weight: 650; letter-spacing: -.02em }
+.stat-mini .fo-note { grid-column: 1 / -1; margin-top: 6px; color: var(--tint-ink); font-size: 12px }
 
 /* Edit monthly expenses dialog */
 .expenses-modal { width: min(760px, 100%) }
@@ -1246,6 +1335,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 @media (max-width: 1100px) {
   /* One column, in the original order: hero, figures, then quick links */
+  /* Transactions: Statistics becomes a row above the lists */
+  .wallet-board { grid-template-columns: 1fr }
+  .stats-panel { position: static; order: -1; margin-top: 0; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 28px }
+  .stats-panel h2 { grid-column: 1 / -1 }
+  .stats-ring { width: 190px; margin: 0 }
+  .stats-caption { grid-column: 1; margin: 0 }
+  .stats-figures { grid-column: 2; grid-row: 2 / span 2 }
+
   /* Big figure on its own row, then the three pastel cards */
   .overview-top { grid-template-columns: 1fr }
   .balance-card { min-height: 170px }
@@ -1253,9 +1350,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 @media (max-width: 1000px) {
-  .goal-form, .fo-card-row { grid-template-columns: 1fr }
-  .fo-stat-row { grid-template-columns: 1fr 1fr }
-  .fo-stat-row > .blue { grid-column: 1 / -1 }
+  .goal-form { grid-template-columns: 1fr }
   .method-grid { grid-template-columns: repeat(2, 1fr) }
 }
 
@@ -1277,7 +1372,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .page-title-row { align-items: flex-start; flex-direction: column }
   .new-goal-button { white-space: nowrap }
 
-  .summary-grid, .quick-grid, .fo-stat-row, .result-grid, .input-workspace, .metric-grid, .field-grid, .manual-entry-fields { grid-template-columns: 1fr }
+  .summary-grid, .quick-grid, .result-grid, .input-workspace, .metric-grid, .field-grid, .manual-entry-fields { grid-template-columns: 1fr }
   .field-grid .full-width { grid-column: auto }
   .dashboard-hero { min-height: 0; padding: 26px; border-radius: var(--r-lg) }
   .summary-grid article { min-height: 0; padding: 18px 18px 18px 78px }
@@ -1322,7 +1417,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .risk-modal { padding: 24px 16px; border-radius: var(--r-lg) }
   .modal-actions { flex-wrap: wrap }
   .modal-actions > * { flex: 1 1 140px }
-  .transaction-list li { grid-template-columns: 50px minmax(0, 1fr) auto; font-size: 14px }
+  .wallet-main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "card" "category" "expenses" "transactions" }
+  .stats-panel { grid-template-columns: 1fr; justify-items: stretch }
+  .stats-ring { width: 200px; margin: 0 auto }
+  .stats-caption, .stats-figures { grid-column: auto; grid-row: auto }
+  .category-grid { gap: 8px }
+  .category-tile { min-height: 0; padding: 14px 12px }
+  .category-icon { margin-bottom: 10px }
+  .category-tile strong { font-size: 16px }
+  .fo-card { padding: 18px 16px }
+  .transaction-list li { column-gap: 8px; font-size: 14px }
+  .transaction-list .tx-date { font-size: 12px }
+  .transaction-list strong { min-width: 0 }
   .expense-editor-group { padding: 12px 10px }
   .expense-editor-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px; gap: 6px }
   .expense-editor-row > input { grid-column: 1 / -1 }

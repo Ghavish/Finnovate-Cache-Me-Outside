@@ -320,4 +320,8 @@ export default {
   "View all": "Tout voir",
   "Name": "Nom",
   "Amount": "Montant",
+  "My card": "Ma carte",
+  "Statistics": "Statistiques",
+  "Expenses use {percent}% of your salary": "Les dépenses utilisent {percent} % de votre salaire",
+  "Monthly expenses vs salary": "Dépenses mensuelles par rapport au salaire",
 }
