@@ -4,16 +4,17 @@
    TOKENS: Aurora Teal palette, light and dark
    ========================================================= */
 
+/* Light: Coinview-style white panels on a cool, near-white ground, with soft pastel cards. */
 :root,
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #F4F7F8;
+  --bg: #F3F5F9;
   --surface: #FFFFFF;
-  --raised: #EAF1F3;
-  --text: #0E1A22;
-  --muted: #557080;
-  --line: rgba(14, 26, 34, .09);
-  --line-strong: rgba(14, 26, 34, .18);
+  --raised: #F1F3F7;
+  --text: #12141A;
+  --muted: #5A6170;
+  --line: rgba(18, 20, 26, .08);
+  --line-strong: rgba(18, 20, 26, .16);
   --input-bg: #FFFFFF;
 
   --accent: #0D9488;          /* fills: buttons, bars, active states */
@@ -26,9 +27,31 @@
   --tight: #A16207;
   --danger: #BE123C;
 
-  --shadow-sm: 0 1px 2px rgba(14, 26, 34, .05);
-  --shadow: 0 1px 2px rgba(14, 26, 34, .04), 0 14px 34px -14px rgba(14, 26, 34, .16);
-  --shadow-lg: 0 2px 6px rgba(14, 26, 34, .06), 0 30px 60px -24px rgba(14, 26, 34, .28);
+  /* Coinview pastels for summary cards, with an ink that passes AA on each */
+  --tint-lilac: #E7E1F7;
+  --tint-lilac-ink: #5B3FB8;
+  --tint-mint: #DAF1E1;
+  --tint-mint-ink: #17663A;
+  --tint-cream: #F6EFD4;
+  --tint-cream-ink: #7A5A0C;
+  --tint-sky: #DFEBFA;
+  --tint-sky-ink: #24569C;
+
+  /* Feature panels (dashboard hero, salary card): a sky pastel in light mode */
+  --feature-bg: linear-gradient(135deg, #E3EEFB 0%, #DCE7FA 55%, #E6E1F8 100%);
+  --feature-text: #12141A;
+  --feature-strong: #0B1220;
+  --feature-muted: #3F4A5E;
+  --feature-line: rgba(36, 86, 156, .14);
+  --feature-chip: rgba(255, 255, 255, .7);
+  --feature-accent: #0F766E;
+  --feature-input: rgba(255, 255, 255, .85);
+  --feature-error: #BE123C;
+  --aurora-opacity: .32;
+
+  --shadow-sm: 0 1px 2px rgba(18, 20, 26, .04);
+  --shadow: 0 1px 2px rgba(18, 20, 26, .03), 0 12px 30px -16px rgba(18, 20, 26, .14);
+  --shadow-lg: 0 2px 6px rgba(18, 20, 26, .05), 0 28px 56px -26px rgba(18, 20, 26, .24);
   --backdrop: rgba(7, 11, 16, .55);
 }
 
@@ -53,6 +76,27 @@
   --tight: #FACC15;
   --danger: #FB7185;
 
+  --tint-lilac: #1C1932;
+  --tint-lilac-ink: #C4B5FD;
+  --tint-mint: #102720;
+  --tint-mint-ink: #86EFAC;
+  --tint-cream: #29230F;
+  --tint-cream-ink: #FDE68A;
+  --tint-sky: #122236;
+  --tint-sky-ink: #93C5FD;
+
+  /* Feature panels stay on the night ground with the full aurora */
+  --feature-bg: var(--night);
+  --feature-text: var(--night-text);
+  --feature-strong: #FFFFFF;
+  --feature-muted: var(--night-muted);
+  --feature-line: rgba(230, 241, 244, .08);
+  --feature-chip: rgba(7, 11, 16, .4);
+  --feature-accent: var(--teal);
+  --feature-input: rgba(7, 11, 16, .5);
+  --feature-error: #FDA4AF;
+  --aurora-opacity: 1;
+
   --shadow-sm: 0 1px 0 rgba(255, 255, 255, .03) inset;
   --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 18px 40px -18px rgba(0, 0, 0, .7);
   --shadow-lg: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 34px 70px -24px rgba(0, 0, 0, .85);
@@ -63,7 +107,7 @@
   /* Shared across themes */
   --rail: #0A1119;            /* the side rail stays dark in both themes */
   --rail-text: #9DB2BE;
-  --night: #0C141D;           /* ground of the hero, coach orb and 404 */
+  --night: #0C141D;           /* dark ground: coach orb, camera, 404, and feature panels in dark mode */
   --night-text: #E6F1F4;
   --night-muted: #9DB2BE;
   --teal: #2DD4BF;
@@ -550,29 +594,30 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   min-height: 320px;
   align-items: flex-end;
   overflow: hidden;
-  border: 1px solid rgba(230, 241, 244, .08);
+  border: 1px solid var(--feature-line);
   border-radius: var(--r-xl);
   padding: 40px;
-  color: var(--night-text);
-  background: var(--night);
+  color: var(--feature-text);
+  background: var(--feature-bg);
   box-shadow: var(--shadow-lg);
 }
+.dashboard-hero .aurora, .fo-stat-card.blue::before { opacity: var(--aurora-opacity) }
 .dashboard-hero > div:not(.aurora) { position: relative; z-index: 1; max-width: 560px }
 .dashboard-hero > div:not(.aurora) > span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  border: 1px solid rgba(230, 241, 244, .14);
+  border: 1px solid var(--feature-line);
   border-radius: 99px;
   padding: 6px 12px;
-  color: var(--teal);
-  background: rgba(7, 11, 16, .4);
+  color: var(--feature-accent);
+  background: var(--feature-chip);
   font-size: 13px;
   font-weight: 600;
   backdrop-filter: blur(8px);
 }
 .dashboard-hero h2 { margin: 18px 0 10px; font-size: clamp(30px, 3.4vw, 42px); font-weight: 650; line-height: 1.05; letter-spacing: -.035em }
-.dashboard-hero p { margin: 0; color: var(--night-muted); font-size: 16px; line-height: 1.65 }
+.dashboard-hero p { margin: 0; color: var(--feature-muted); font-size: 16px; line-height: 1.65 }
 .dashboard-hero a {
   display: inline-flex;
   align-items: center;
@@ -788,8 +833,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .fo-stat-card { position: relative; display: flex; min-height: 168px; flex-direction: column; justify-content: space-between; gap: 14px; overflow: hidden; padding: 24px; isolation: isolate }
 .fo-stat-card small { color: var(--muted); font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase }
 .fo-stat-card > strong, .fo-value-row strong { font-size: 30px; font-weight: 650; letter-spacing: -.03em }
-/* Salary is the wallet's balance card: always on the night ground with the aurora */
-.fo-stat-card.blue { color: var(--night-text); background: var(--night); border-color: rgba(230, 241, 244, .08) }
+/* Salary is the wallet's balance card: a feature panel (sky pastel in light, night and aurora in dark) */
+.fo-stat-card.blue { color: var(--feature-text); background: var(--feature-bg); border-color: var(--feature-line) }
 .fo-stat-card.blue::before {
   content: "";
   position: absolute;
@@ -799,12 +844,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background: radial-gradient(40% 40% at 40% 50%, rgba(45, 212, 191, .45), transparent 70%), radial-gradient(40% 40% at 70% 60%, rgba(129, 140, 248, .4), transparent 70%);
   filter: blur(20px);
 }
-.fo-stat-card.blue small { color: var(--night-muted) }
-.fo-stat-card.blue > strong, .fo-stat-card.blue .fo-value-row strong { font-size: clamp(34px, 3.4vw, 44px); color: #fff }
-.fo-stat-card.blue .text-button { color: var(--teal) }
-.fo-stat-card.blue .edit-input b { color: var(--teal) }
-.fo-stat-card.blue .edit-input input { border-color: rgba(230, 241, 244, .2); color: #fff; background: rgba(7, 11, 16, .5) }
-.fo-stat-card.blue .form-error { color: #FDA4AF }
+.fo-stat-card.blue small { color: var(--feature-muted) }
+.fo-stat-card.blue > strong, .fo-stat-card.blue .fo-value-row strong { font-size: clamp(34px, 3.4vw, 44px); color: var(--feature-strong) }
+.fo-stat-card.blue .text-button { color: var(--feature-accent) }
+.fo-stat-card.blue .edit-input b { color: var(--feature-accent) }
+.fo-stat-card.blue .edit-input input { border-color: var(--feature-line); color: var(--feature-strong); background: var(--feature-input) }
+.fo-stat-card.blue .form-error { color: var(--feature-error) }
 .fo-stat-card.amber > strong { color: var(--tight) }
 .fo-stat-card.safe > strong { color: var(--safe) }
 .fo-stat-card.safe { background: linear-gradient(160deg, var(--safe-soft), transparent 70%), var(--surface) }
