@@ -2,11 +2,16 @@
 name: MoBudget
 description: Smart money planning in English, French and Kreol Morisien.
 colors:
-  bg-light: "#F4F7F8"
+  bg-light: "#F3F5F9"
   surface-light: "#FFFFFF"
-  raised-light: "#EAF1F3"
-  text-light: "#0E1A22"
-  muted-light: "#557080"
+  raised-light: "#F1F3F7"
+  text-light: "#12141A"
+  muted-light: "#5A6170"
+  tint-lilac-light: "#E7E1F7"
+  tint-mint-light: "#DAF1E1"
+  tint-cream-light: "#F6EFD4"
+  tint-sky-light: "#DFEBFA"
+  feature-light: "#E3EEFB"
   bg-dark: "#070B10"
   surface-dark: "#0F1620"
   raised-dark: "#172231"
@@ -85,20 +90,24 @@ components:
     rounded: "{rounded.lg}"
     padding: "24px"
   hero:
+    backgroundColor: "{colors.feature-light}"
+    textColor: "{colors.text-light}"
+  hero-dark:
     backgroundColor: "{colors.night}"
     textColor: "{colors.text-dark}"
     rounded: "{rounded.xl}"
     padding: "40px"
   side-rail:
     backgroundColor: "{colors.rail}"
-    width: "256px"
+    width: "76px"
+    widthExpanded: "244px"
 ---
 
 # Design System: MoBudget
 
 ## Overview
 
-Money as a calm sky at night. MoBudget is a working app (Operate mode): the shell is a dark slate rail plus a quiet top bar, and every screen puts the user's numbers first. One signature move ties it together: the **aurora band**, a slow teal-to-indigo light field that lives only behind the dashboard hero, the salary card, the AI Coach orb, the login brand panel and the 404 screen.
+Money as a calm sky at night, with a Coinview-style day. MoBudget is a working app (Operate mode): the shell is a dark icon rail plus a quiet top bar, and every screen puts the user's numbers first. Light mode follows the Coinview "Overview" look: white panels on a near-white ground and soft pastel cards (lilac, mint, cream, sky). One signature move ties it together: the **aurora band**, a slow teal-to-indigo light field that lives only behind the dashboard hero, the salary card, the AI Coach orb, the login brand panel and the 404 screen. In light mode the hero and salary card sit on a sky pastel with a faint aurora; in dark mode they keep the night ground.
 
 Light and dark themes share one structure. The device setting decides by default; the header toggle overrides it and is remembered. Tokens live as CSS custom properties in `src/index.css` under `:root[data-theme="light"]` and `:root[data-theme="dark"]`.
 
@@ -111,7 +120,10 @@ Teal is the action colour: primary buttons, the active nav item, focus rings, pr
 Indigo is the second light: the aurora's other half, the "Describe it your way" card, the Active goals icon and the end of progress gradients.
 
 ### Neutral
-Slate grounds tinted towards teal. The side rail (`rail`) and the hero/night panels (`night`) stay dark in both themes.
+Light mode: near-white ground, white surfaces, neutral ink. Dark mode: slate grounds tinted towards teal. The side rail (`rail`), mobile bar, login brand panel, camera frame, coach orb and 404 stay dark in both themes. The dashboard hero and the salary card use the `--feature-*` tokens, so they follow the theme.
+
+### Pastel tints
+`--tint-lilac`, `--tint-mint`, `--tint-cream` and `--tint-sky`, each with a `-ink` colour that passes AA on it. They mark summary figures (dashboard cards, the Statistics figures) and never carry verdicts. Dark mode has deep versions of each.
 
 ### Named Rules
 - **Verdict colours do real jobs.** Safe, tight and danger colour goal card tops, badges, expense groups and transaction chips. They never decorate.
@@ -126,7 +138,7 @@ Display for page titles (650, tight tracking), title for card headings, figure f
 
 ## Layout
 
-256px fixed rail and a centred content column up to 1200px. The dashboard uses a main column plus a 320px figure rail on desktop; under 1100px it becomes one column in the order hero, figures, quick links. Under 760px the rail is replaced by a floating four-item bottom bar.
+76px fixed icon rail that widens to 244px over the page on hover or keyboard focus, and a centred content column up to 1200px. The dashboard follows Coinview's "Overview": the safe saving capacity card beside three pastel figure cards, then the hero and quick links, then a recent-transactions table. Transactions follows the "Welcome Rakib" board with Wallet styling: My card and Category, their lists below, and a Statistics card on the right. Under 1100px both stack, with Statistics on top. Under 760px the rail is replaced by a floating four-item bottom bar and Logout moves to the top bar.
 
 ## Elevation & Depth
 
@@ -148,7 +160,7 @@ Surface fill, hairline border, 20px radius, 24px padding. Goal cards add a verdi
 Input-ground fill, stronger hairline, teal border and 4px soft teal ring on focus.
 
 ### Navigation
-Rail items with a shared sliding indicator (Motion `layoutId`). Mobile uses a floating rounded bar on the rail colour.
+Icon rail in the Coinview format: icons only, labels fade in when it widens on hover or focus. Items share a sliding indicator (Motion `layoutId`) with a teal marker on the rail edge. Create Goal and Logout sit at the foot. Mobile uses a floating rounded bar on the rail colour.
 
 ### Aurora band
 `.aurora`: blurred radial teal and indigo fields drifting over 22s. Always inside an `overflow: hidden` parent with `isolation: isolate`.
