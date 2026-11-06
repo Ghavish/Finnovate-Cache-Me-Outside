@@ -314,4 +314,14 @@ export default {
   "Switch to light mode": "Pas lor mod kler",
   "Switch to dark mode": "Pas lor mod nwar",
   "Add your name": "Azout to nom",
+  // Coinview redesign (drafts: please review)
+  "Your figures": "To bann sif",
+  "Recent transactions": "Dernie tranzaksion",
+  "View all": "Get tou",
+  "Name": "Nom",
+  "Amount": "Montan",
+  "My card": "Mo kart",
+  "Statistics": "Statistik",
+  "Expenses use {percent}% of your salary": "Bann depans pran {percent}% to saler",
+  "Monthly expenses vs salary": "Depans par mwa ek saler",
 }

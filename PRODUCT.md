@@ -33,7 +33,7 @@ React + Vite web app. Firebase Authentication for sign-in. All data goes through
 ## Brand Commitments
 
 - Name stays **MoBudget**, tagline "Smart money planning". The logo may change.
-- Approved palette: Aurora Teal (teal and indigo accents on slate), in light and dark themes.
+- Approved palette: Aurora Teal (teal and indigo accents on slate), in light and dark themes. Light mode follows the Coinview look: white panels with lilac, mint, cream and sky pastel cards.
 
 ## Evidence on Hand
 

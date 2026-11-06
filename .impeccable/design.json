@@ -44,10 +44,10 @@
   "narrative": {
     "northStar": "Money as a calm sky at night",
     "overview": "A working finance app on slate grounds, lit by one aurora band of teal and indigo. Numbers first; verdict colours only for verdicts.",
-    "keyCharacteristics": ["Dark side rail in both themes", "Aurora band in five brand places", "Tabular money figures", "Verdict-tinted goal cards"],
+    "keyCharacteristics": ["Dark icon rail in both themes, expanding on hover", "Coinview-style light mode with pastel cards", "Aurora band in five brand places", "Tabular money figures", "Verdict-tinted goal cards"],
     "rules": [
       { "name": "Verdict colours do real jobs", "body": "Safe, tight and danger colours mark verdicts and money direction only.", "section": "colors" },
-      { "name": "Aurora only where the brand speaks", "body": "Hero, salary card, coach orb, login panel, 404.", "section": "colors" }
+      { "name": "Aurora only where the brand speaks", "body": "Hero, salary card, coach orb, login panel, 404. In light mode the hero and salary card show it faintly on a sky pastel.", "section": "colors" }
     ],
     "dos": ["Use the CSS custom properties", "Respect reduced motion"],
     "donts": ["No gradient text", "No teal-deep as small text on light grounds"]
