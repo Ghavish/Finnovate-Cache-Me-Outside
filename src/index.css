@@ -370,7 +370,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
    ========================================================= */
 
 .main-content { width: min(1200px, calc(100% - 64px)); margin: 0 auto; padding: 40px 0 100px }
-.page-enter { animation: page-in .5s var(--ease-out) both }
+.page-enter { animation: page-in .5s var(--ease-out) backwards } /* not "both": a transform left applied would trap fixed elements inside the page */
 @keyframes page-in { from { opacity: 0; transform: translateY(10px) } }
 
 .page-heading, .page-title-row { margin-bottom: 28px }
