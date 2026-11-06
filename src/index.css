@@ -160,48 +160,66 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .brand small { font-size: 12px; color: var(--muted); letter-spacing: .01em }
 .logo-mark { flex: none; border-radius: 9px; box-shadow: 0 6px 18px -6px rgba(45, 212, 191, .55) }
 
+/* Icon rail (Coinview style): 76px of icons, widening over the page on hover or keyboard focus. */
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  z-index: 20;
+  z-index: 40;
   display: flex;
-  width: 256px;
+  width: 76px;
   flex-direction: column;
-  padding: 28px 16px 22px;
+  padding: 22px 14px 18px;
   overflow: hidden;
   color: var(--night-text);
   background: var(--rail);
   border-right: 1px solid rgba(230, 241, 244, .06);
+  transition: width .32s var(--ease-out), box-shadow .32s ease;
 }
+.sidebar:hover, .sidebar:focus-within { width: 244px; box-shadow: 28px 0 60px -28px rgba(0, 0, 0, .6) }
 .sidebar::after { /* quiet aurora glow at the foot of the rail */
   content: "";
   position: absolute;
-  inset: auto -40% -18% -40%;
+  inset: auto -120% -18% -120%;
   height: 260px;
   pointer-events: none;
   background: radial-gradient(50% 50% at 50% 60%, rgba(45, 212, 191, .2), transparent 70%), radial-gradient(40% 40% at 70% 70%, rgba(129, 140, 248, .18), transparent 70%);
 }
-.sidebar .brand { margin: 0 10px 40px }
+.sidebar .brand { position: relative; z-index: 1; margin: 0 0 36px 7px; gap: 14px }
 .sidebar .brand strong { color: #fff }
 .sidebar .brand strong em { color: var(--teal) }
 .sidebar .brand small { color: var(--rail-text) }
-.sidebar-nav { position: relative; z-index: 1; display: grid; gap: 4px }
+/* Labels stay in the page for screen readers; they only fade in when the rail opens. */
+.sidebar .brand-text, .rail-label {
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity .18s ease, transform .3s var(--ease-out);
+}
+.sidebar:is(:hover, :focus-within) :is(.brand-text, .rail-label) { opacity: 1; transform: none; transition-delay: .07s }
+.sidebar-nav { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px }
 .nav-item {
   position: relative;
   display: flex;
+  width: 100%;
   align-items: center;
-  gap: 12px;
-  min-height: 46px;
+  gap: 14px;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
   border-radius: var(--r);
   padding: 0 14px;
   color: var(--rail-text);
+  background: transparent;
+  font: inherit;
   font-size: 15px;
   font-weight: 500;
+  text-align: left;
   text-decoration: none;
   transition: color .2s ease, background-color .2s ease;
 }
+.nav-item > svg { flex: none }
 .nav-item > svg, .nav-item > span:not(.nav-indicator) { position: relative; z-index: 1 }
-.nav-item:hover { color: #fff; background: rgba(230, 241, 244, .05) }
+.nav-item:hover { color: #fff; background: rgba(230, 241, 244, .06) }
 .nav-item.active { color: #fff; font-weight: 600 }
 .nav-item.active > svg { color: var(--teal) }
 .nav-indicator {
@@ -209,29 +227,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   inset: 0;
   z-index: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(45, 212, 191, .16), rgba(129, 140, 248, .08));
-  box-shadow: inset 0 0 0 1px rgba(45, 212, 191, .22);
+  background: rgba(230, 241, 244, .09);
+  box-shadow: inset 0 0 0 1px rgba(230, 241, 244, .06);
 }
+.nav-indicator::before { /* Coinview's marker on the rail edge */
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: -14px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--teal);
+}
+.sidebar-foot { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: auto }
 .create-button {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 14px;
+  min-width: 0;
   min-height: 48px;
-  margin-top: auto;
+  margin-bottom: 8px;
+  overflow: hidden;
   border-radius: var(--r);
+  padding: 0 14px;
   color: var(--on-accent);
   background: var(--teal);
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 10px 26px -10px rgba(45, 212, 191, .7);
-  transition: transform .2s var(--ease-out), box-shadow .2s ease;
+  transition: box-shadow .2s ease, filter .2s ease;
 }
-.create-button:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -10px rgba(45, 212, 191, .85) }
+.create-button > svg { flex: none }
+.create-button:hover { filter: brightness(1.06); box-shadow: 0 14px 30px -10px rgba(45, 212, 191, .85) }
 
-.page-column { min-height: 100vh; margin-left: 256px }
+.page-column { min-height: 100vh; margin-left: 76px }
 .topbar {
   position: sticky;
   top: 0;
@@ -262,7 +292,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .topbar-actions > button:hover { background: var(--raised) }
 .profile-button span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.mobile-brand, .mobile-nav { display: none }
+.mobile-brand, .mobile-nav, .topbar-actions > .mobile-only { display: none }
 
 .theme-toggle {
   display: grid;
@@ -1133,6 +1163,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .page-column { margin-left: 0 }
   .topbar { justify-content: space-between; gap: 8px; min-height: 60px; padding: 0 14px }
   .mobile-brand { display: flex; align-items: center; min-width: 0 }
+  .topbar-actions > .mobile-only { display: flex }
   .mobile-brand .brand strong { font-size: 16px }
   .topbar-actions > button:not(.theme-toggle) span, .topbar .language-picker svg { display: none }
   .topbar-actions { gap: 4px }

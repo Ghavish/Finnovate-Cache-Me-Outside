@@ -30,7 +30,8 @@ export default function Header() {
           <UserCircle size={24} />
           <span>{user?.displayName || user?.email}</span>
         </button>
-        <button type="button" onClick={handleSignOut} aria-label={t('Logout')}>
+        {/* Logout lives at the foot of the rail; phones hide the rail, so they keep it here. */}
+        <button type="button" className="mobile-only" onClick={handleSignOut} aria-label={t('Logout')}>
           <LogOut size={19} />
           <span>{t('Logout')}</span>
         </button>
