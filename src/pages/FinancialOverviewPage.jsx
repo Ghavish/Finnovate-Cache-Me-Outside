@@ -9,6 +9,7 @@ import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { categoryLabel, EXPENSE_GROUP_LABELS } from '../i18n/labels.js'
 import { k } from '../i18n/strings.js'
 import { centsToRupees, moneyFromCents, rupeesToCents } from '../utils/money.js'
+import ModalPortal from '../components/ui/ModalPortal.jsx'
 
 const GROUPS = [
   { id: 'essential', label: EXPENSE_GROUP_LABELS.essential, hint: k('Rent, bills, groceries, transport'), icon: House },
@@ -114,7 +115,7 @@ function ExpensesEditor({ expenses, onClose, onSaved }) {
     }
   }
 
-  return <div className="modal-backdrop"><form className="risk-modal expenses-modal" role="dialog" aria-modal="true" aria-labelledby="expenses-title" onSubmit={save}>
+  return <ModalPortal><div className="modal-backdrop"><form className="risk-modal expenses-modal" role="dialog" aria-modal="true" aria-labelledby="expenses-title" onSubmit={save}>
     <button type="button" className="modal-close" onClick={onClose} aria-label={t('Close')}><X size={20} /></button>
     <div className="modal-kicker"><Pencil size={16} />{t('Expense summary')}</div>
     <h2 id="expenses-title">{t('Your monthly expenses')}</h2>
@@ -138,7 +139,7 @@ function ExpensesEditor({ expenses, onClose, onSaved }) {
     <p className="draft-total">{t('Monthly expenses')} <strong>{moneyFromCents(rupeesToCents(total))}</strong></p>
     {error && <p className="form-error">{t(error)}</p>}
     <div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>{t('Cancel')}</button><button className="primary-button" disabled={saving}>{saving && <LoaderCircle className="spinner" size={18} />}{saving ? t('Saving…') : t('Save expenses')}</button></div>
-  </form></div>
+  </form></div></ModalPortal>
 }
 
 export default function FinancialOverviewPage() {

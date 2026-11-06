@@ -23,6 +23,7 @@ import { categoryLabel, DOC_TYPE_LABELS } from '../i18n/labels.js'
 import { k } from '../i18n/strings.js'
 import { centsToRupees, money, rupeesToCents } from '../utils/money.js'
 import { toWav } from '../utils/wav.js'
+import ModalPortal from '../components/ui/ModalPortal.jsx'
 
 // --- Config ---
 const LOW_CONFIDENCE = 0.7 // same threshold as the n8n Guardrail
@@ -543,7 +544,7 @@ function ReviewPanel({
 function LowConfidenceModal({ draft, onUseAi, onEdit }) {
   const { t } = useLanguage()
   return (
-    <div className="modal-backdrop">
+    <ModalPortal><div className="modal-backdrop">
       <section className="risk-modal low-confidence-modal" role="dialog" aria-modal="true" aria-labelledby="low-confidence-title">
         <div className="modal-kicker warning"><AlertTriangle size={17} />{t('Low confidence')}</div>
         <h2 id="low-confidence-title">{t('Check this before saving')}</h2>
@@ -557,6 +558,6 @@ function LowConfidenceModal({ draft, onUseAi, onEdit }) {
           <button type="button" className="primary-button" onClick={onEdit}><Pencil size={17} />{t('Edit it myself')}</button>
         </div>
       </section>
-    </div>
+    </div></ModalPortal>
   )
 }

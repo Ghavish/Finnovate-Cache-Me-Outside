@@ -5,6 +5,7 @@ import { callN8n, peekRead, readN8n } from '../firebase/apiClient.js'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { k } from '../i18n/strings.js'
 import { centsToRupees, money, moneyFromCents, rupeesToCents } from '../utils/money.js'
+import ModalPortal from '../components/ui/ModalPortal.jsx'
 
 const LIST_GOALS = { inputType: 'listGoals' }
 const emptyForm = () => ({ name: '', targetAmount: '', currentSavings: '', link: '', description: '' })
@@ -74,7 +75,7 @@ function EditGoalModal({ goal, onClose, onSaved }) {
     }
   }
 
-  return <div className="modal-backdrop"><form className="risk-modal edit-goal-modal" role="dialog" aria-modal="true" aria-labelledby="edit-goal-title" onSubmit={save}>
+  return <ModalPortal><div className="modal-backdrop"><form className="risk-modal edit-goal-modal" role="dialog" aria-modal="true" aria-labelledby="edit-goal-title" onSubmit={save}>
     <button type="button" className="modal-close" onClick={onClose} aria-label={t('Close')}><X size={20} /></button>
     <div className="modal-kicker"><Pencil size={16} />{t('Edit goal')}</div>
     <h2 id="edit-goal-title">{goal.itemName || t('Cash goal')}</h2>
@@ -87,7 +88,7 @@ function EditGoalModal({ goal, onClose, onSaved }) {
     </div>
     {error && <p className="form-error">{t(error)}</p>}
     <div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>{t('Cancel')}</button><button className="primary-button" disabled={saving}>{saving && <LoaderCircle className="spinner" size={18} />}{saving ? t('Saving…') : t('Save changes')}</button></div>
-  </form></div>
+  </form></div></ModalPortal>
 }
 
 function RiskModal({ result, onClose, onAdd, adding }) {
@@ -95,11 +96,11 @@ function RiskModal({ result, onClose, onAdd, adding }) {
   if (!result) return null
   const Icon = result.verdict === 'SAFE' ? CheckCircle2 : result.verdict === 'TIGHT' ? AlertTriangle : ShieldAlert
   const timeNeeded = !result.reachable ? t('Not reachable') : result.monthsNeeded ? (result.monthsNeeded === 1 ? t('{count} month', { count: 1 }) : t('{count} months', { count: result.monthsNeeded })) : t('Now')
-  return <div className="modal-backdrop"><section className="risk-modal" role="dialog" aria-modal="true"><button className="modal-close" onClick={onClose} aria-label={t('Close')}><X size={20} /></button><div className="modal-kicker"><Sparkles size={17} />{t('Goal review')}</div><h2>{t('Your risk profile')}</h2><p>{t('Review this analysis before deciding whether to add the goal.')}</p>
+  return <ModalPortal><div className="modal-backdrop"><section className="risk-modal" role="dialog" aria-modal="true"><button className="modal-close" onClick={onClose} aria-label={t('Close')}><X size={20} /></button><div className="modal-kicker"><Sparkles size={17} />{t('Goal review')}</div><h2>{t('Your risk profile')}</h2><p>{t('Review this analysis before deciding whether to add the goal.')}</p>
     <div className={`verdict-banner ${badgeClass(result.verdict)}`}><Icon size={25} /><div><small>{t('VERDICT')}</small><strong>{t(VERDICT_TEXT[result.verdict])}</strong></div></div>
     <div className="metric-grid"><article><small>{t('Goal amount')}</small><strong>{money(result.targetAmount)}</strong></article><article><small>{t('Safe to spend now')}</small><strong>{moneyFromCents(result.safeToSpendCents)}</strong></article><article><small>{t('Time needed')}</small><strong>{timeNeeded}</strong></article></div>
     <div className="explanation-box"><h3>{t('Why MoBudget gave this result')}</h3><p>{t('The goal amount is compared with the money you can safely spend today, after keeping a buffer for your usual spending and upcoming festivals. If it does not fit yet, MoBudget counts how many months of saving it takes.')}</p></div>
-    <div className="modal-actions"><button className="secondary-button" onClick={onClose}>{t('Decline')}</button><button className="primary-button" onClick={onAdd} disabled={adding}>{adding && <LoaderCircle className="spinner" size={18} />}{adding ? t('Adding…') : t('Add goal')}</button></div></section></div>
+    <div className="modal-actions"><button className="secondary-button" onClick={onClose}>{t('Decline')}</button><button className="primary-button" onClick={onAdd} disabled={adding}>{adding && <LoaderCircle className="spinner" size={18} />}{adding ? t('Adding…') : t('Add goal')}</button></div></section></div></ModalPortal>
 }
 
 export default function GoalsPage({ startCreating = false }) {
